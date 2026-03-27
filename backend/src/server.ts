@@ -16,6 +16,21 @@ app.get("/health", (_request, response) => {
   });
 });
 
+app.use(
+  (
+    error: unknown,
+    _request: express.Request,
+    response: express.Response,
+    _next: express.NextFunction,
+  ) => {
+    console.error(error);
+    response.status(500).json({
+      ok: false,
+      error: "Internal server error",
+    });
+  },
+);
+
 app.listen(port, () => {
   console.log(`Followup backend listening on port ${port}`);
 });

@@ -56,6 +56,14 @@ Dependencies are not installed yet. After we agree on the stack, the next step i
 npm install
 ```
 
+Then initialize the local database:
+
+```bash
+npm --workspace backend run db:generate
+npm --workspace backend run db:push
+npm --workspace backend run db:seed
+```
+
 Then we can wire up:
 
 ```bash

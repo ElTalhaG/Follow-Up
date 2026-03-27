@@ -49,11 +49,11 @@
 - `done` Database direction chosen
 - `done` Email integration direction chosen
 - `done` Web frontend chosen
-- `not started` Set up the database and confirm the app can run locally
+- `in progress` Set up the database and confirm the app can run locally
 
 ## Phase 4: Design The Database
 
-- `in progress` Create the database for the product
+- `done` Create the database for the product
 - `done` Create the main tables:
 - `done` `users`
 - `done` `accounts`
@@ -67,7 +67,7 @@
 - `done` One account can have many conversations
 - `done` One conversation can have many messages
 - `done` One message can generate many follow-up suggestions
-- `in progress` Add a few sample records so you can test without waiting for real user data
+- `done` Add a few sample records so you can test without waiting for real user data
 
 ## Phase 5: Build Authentication
 
@@ -210,11 +210,11 @@
 - `done` Phase 1
 - `done` Phase 2
 - `in progress` Phase 3
-- `in progress` Phase 4
+- `done` Phase 4
 - `not started` Phase 5 onward
 
 ## Next Best Move
 
-1. Finish Phase 3 and 4 with a real database setup.
+1. Finish Phase 3 by installing dependencies and verifying the app runs locally.
 2. Start Phase 5 authentication.
 3. Move into Phase 6 Gmail connection.
