@@ -60,8 +60,7 @@ Then initialize the local database:
 
 ```bash
 npm --workspace backend run db:generate
-npm --workspace backend run db:push
-npm --workspace backend run db:seed
+npm --workspace backend run db:init
 ```
 
 Then we can wire up:

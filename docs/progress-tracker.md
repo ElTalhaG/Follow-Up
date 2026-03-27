@@ -49,7 +49,7 @@
 - `done` Database direction chosen
 - `done` Email integration direction chosen
 - `done` Web frontend chosen
-- `in progress` Set up the database and confirm the app can run locally
+- `done` Set up the database and confirm the app can run locally
 
 ## Phase 4: Design The Database
 
@@ -209,12 +209,12 @@
 
 - `done` Phase 1
 - `done` Phase 2
-- `in progress` Phase 3
+- `done` Phase 3
 - `done` Phase 4
 - `not started` Phase 5 onward
 
 ## Next Best Move
 
-1. Finish Phase 3 by installing dependencies and verifying the app runs locally.
-2. Start Phase 5 authentication.
-3. Move into Phase 6 Gmail connection.
+1. Start Phase 5 authentication.
+2. Move into Phase 6 Gmail connection.
+3. Replace demo follow-up reads with database-backed queries.

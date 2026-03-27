@@ -8,8 +8,8 @@
     "build": "tsc -p tsconfig.json",
     "start": "node dist/server.js",
     "db:generate": "prisma generate",
-    "db:push": "prisma db push",
-    "db:seed": "tsx prisma/seed.ts"
+    "db:init": "node scripts/init-db.mjs",
+    "db:reset": "node scripts/init-db.mjs --reset"
   },
   "dependencies": {
     "@prisma/client": "^6.5.0",

@@ -4,11 +4,11 @@ Current responsibilities:
 
 - Prisma schema
 - local SQLite database
-- seed data for demo conversations
+- deterministic local database initialization
 - shared Prisma client
 
 Current commands:
 
 - `npm run db:generate`
-- `npm run db:push`
-- `npm run db:seed`
+- `npm run db:init`
+- `npm run db:reset`

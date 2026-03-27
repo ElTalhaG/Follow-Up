@@ -6,3 +6,5 @@ dist
 coverage
 *.log
 .idea
+backend/dev.db
+backend/prisma/dev.db
