@@ -71,12 +71,12 @@
 
 ## Phase 5: Build Authentication
 
-- `not started` Create registration logic
-- `not started` Create login logic
-- `not started` Use secure password hashing
-- `not started` Add session handling or token-based auth
-- `not started` Validate duplicate emails and weak passwords
-- `not started` Test signup and login before building anything else
+- `done` Create registration logic
+- `done` Create login logic
+- `done` Use secure password hashing
+- `done` Add session handling or token-based auth
+- `done` Validate duplicate emails and weak passwords
+- `done` Test signup and login before building anything else
 
 ## Phase 6: Build The Inbox Connection
 
@@ -169,7 +169,7 @@
 
 ## Phase 14: Test Everything
 
-- `not started` Test registration and login
+- `done` Test registration and login
 - `not started` Test inbox sync
 - `not started` Test stalled conversation detection
 - `not started` Test follow-up draft generation
@@ -211,10 +211,11 @@
 - `done` Phase 2
 - `done` Phase 3
 - `done` Phase 4
-- `not started` Phase 5 onward
+- `done` Phase 5
+- `not started` Phase 6 onward
 
 ## Next Best Move
 
-1. Start Phase 5 authentication.
-2. Move into Phase 6 Gmail connection.
-3. Replace demo follow-up reads with database-backed queries.
+1. Start Phase 6 Gmail connection.
+2. Replace demo follow-up reads with database-backed queries.
+3. Add authenticated frontend flows on top of the new auth API.

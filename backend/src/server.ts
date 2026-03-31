@@ -1,6 +1,6 @@
 import cors from "cors";
 import express from "express";
-import { buildRouter } from "./api/router.js";
+import { buildRouter, getErrorStatusCode } from "./api/router.js";
 
 const app = express();
 const port = Number(process.env.PORT ?? 4000);
@@ -24,9 +24,12 @@ app.use(
     _next: express.NextFunction,
   ) => {
     console.error(error);
-    response.status(500).json({
+    response.status(getErrorStatusCode(error)).json({
       ok: false,
-      error: "Internal server error",
+      error:
+        error instanceof Error && getErrorStatusCode(error) !== 500
+          ? error.message
+          : "Internal server error",
     });
   },
 );

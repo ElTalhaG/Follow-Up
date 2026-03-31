@@ -19,13 +19,21 @@ const db = new DatabaseSync(dbPath);
 db.exec("PRAGMA foreign_keys = ON;");
 
 db.exec(`
+  DROP TABLE IF EXISTS "Reminder";
+  DROP TABLE IF EXISTS "Task";
+  DROP TABLE IF EXISTS "FollowUp";
+  DROP TABLE IF EXISTS "Message";
+  DROP TABLE IF EXISTS "Conversation";
+  DROP TABLE IF EXISTS "Account";
+  DROP TABLE IF EXISTS "User";
+
   CREATE TABLE IF NOT EXISTS "User" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "email" TEXT NOT NULL UNIQUE,
     "passwordHash" TEXT NOT NULL,
     "fullName" TEXT NOT NULL,
-    "createdAt" TEXT NOT NULL,
-    "updatedAt" TEXT NOT NULL
+    "createdAt" DATETIME NOT NULL,
+    "updatedAt" DATETIME NOT NULL
   );
 
   CREATE TABLE IF NOT EXISTS "Account" (
@@ -34,8 +42,8 @@ db.exec(`
     "provider" TEXT NOT NULL,
     "providerAccountId" TEXT NOT NULL,
     "accessScope" TEXT NOT NULL,
-    "connectedAt" TEXT NOT NULL,
-    "lastSyncedAt" TEXT,
+    "connectedAt" DATETIME NOT NULL,
+    "lastSyncedAt" DATETIME,
     FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE
   );
 
@@ -50,13 +58,13 @@ db.exec(`
     "contactName" TEXT,
     "contactEmail" TEXT NOT NULL,
     "status" TEXT NOT NULL,
-    "lastMessageAt" TEXT NOT NULL,
-    "lastInboundAt" TEXT,
-    "lastOutboundAt" TEXT,
+    "lastMessageAt" DATETIME NOT NULL,
+    "lastInboundAt" DATETIME,
+    "lastOutboundAt" DATETIME,
     "needsFollowUp" INTEGER NOT NULL DEFAULT 0,
     "followUpReason" TEXT,
-    "createdAt" TEXT NOT NULL,
-    "updatedAt" TEXT NOT NULL,
+    "createdAt" DATETIME NOT NULL,
+    "updatedAt" DATETIME NOT NULL,
     FOREIGN KEY ("accountId") REFERENCES "Account"("id") ON DELETE CASCADE
   );
 
@@ -70,8 +78,8 @@ db.exec(`
     "direction" TEXT NOT NULL,
     "senderEmail" TEXT NOT NULL,
     "bodyExcerpt" TEXT NOT NULL,
-    "sentAt" TEXT NOT NULL,
-    "createdAt" TEXT NOT NULL,
+    "sentAt" DATETIME NOT NULL,
+    "createdAt" DATETIME NOT NULL,
     FOREIGN KEY ("conversationId") REFERENCES "Conversation"("id") ON DELETE CASCADE
   );
 
@@ -81,8 +89,8 @@ db.exec(`
     "status" TEXT NOT NULL,
     "reason" TEXT NOT NULL,
     "priority" TEXT NOT NULL,
-    "suggestedAt" TEXT NOT NULL,
-    "completedAt" TEXT,
+    "suggestedAt" DATETIME NOT NULL,
+    "completedAt" DATETIME,
     FOREIGN KEY ("conversationId") REFERENCES "Conversation"("id") ON DELETE CASCADE
   );
 
@@ -91,29 +99,19 @@ db.exec(`
     "conversationId" TEXT NOT NULL,
     "title" TEXT NOT NULL,
     "status" TEXT NOT NULL,
-    "dueAt" TEXT,
-    "createdAt" TEXT NOT NULL,
+    "dueAt" DATETIME,
+    "createdAt" DATETIME NOT NULL,
     FOREIGN KEY ("conversationId") REFERENCES "Conversation"("id") ON DELETE CASCADE
   );
 
   CREATE TABLE IF NOT EXISTS "Reminder" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "conversationId" TEXT NOT NULL,
-    "remindAt" TEXT NOT NULL,
+    "remindAt" DATETIME NOT NULL,
     "status" TEXT NOT NULL,
-    "createdAt" TEXT NOT NULL,
+    "createdAt" DATETIME NOT NULL,
     FOREIGN KEY ("conversationId") REFERENCES "Conversation"("id") ON DELETE CASCADE
   );
-`);
-
-db.exec(`
-  DELETE FROM "Reminder";
-  DELETE FROM "Task";
-  DELETE FROM "FollowUp";
-  DELETE FROM "Message";
-  DELETE FROM "Conversation";
-  DELETE FROM "Account";
-  DELETE FROM "User";
 `);
 
 const now = "2026-03-27T10:00:00.000Z";

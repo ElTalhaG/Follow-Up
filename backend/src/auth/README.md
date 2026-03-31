@@ -1,9 +1,9 @@
 # Auth Module
 
-Planned responsibilities:
+Current responsibilities:
 
 - registration
 - login
-- password hashing
-- token or session handling
-- auth middleware
+- password hashing with `scrypt`
+- signed bearer token auth
+- current-user lookup from auth token
