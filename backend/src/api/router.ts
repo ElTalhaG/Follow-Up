@@ -1,5 +1,4 @@
 import { Router } from "express";
-import { getDemoFlaggedConversations } from "../follow-up/demo-data.js";
 import { prisma } from "../database/prisma.js";
 import {
   AuthError,
@@ -13,6 +12,11 @@ import {
   listGmailAccounts,
   syncGmailAccount,
 } from "../integrations/gmail.js";
+import {
+  listFollowUps,
+  refreshFollowUps,
+  updateFollowUpStatus,
+} from "../follow-up/service.js";
 
 export function buildRouter() {
   const router = Router();
@@ -25,10 +29,49 @@ export function buildRouter() {
     });
   });
 
-  router.get("/follow-ups", (_request, response) => {
-    response.json({
-      items: getDemoFlaggedConversations(),
-    });
+  router.get("/follow-ups", async (request, response, next) => {
+    try {
+      const user = await getUserFromBearerToken(request.headers.authorization);
+      const items = await listFollowUps(user.id);
+
+      response.json({ items });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  router.post("/follow-ups/refresh", async (request, response, next) => {
+    try {
+      const user = await getUserFromBearerToken(request.headers.authorization);
+      const items = await refreshFollowUps(user.id);
+
+      response.json({ items });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  router.post("/follow-ups/:followUpId/status", async (request, response, next) => {
+    try {
+      const user = await getUserFromBearerToken(request.headers.authorization);
+      const followUpId = String(request.params.followUpId ?? "");
+      const status = String(request.body.status ?? "").toUpperCase() as
+        | "OPEN"
+        | "DONE"
+        | "IGNORED"
+        | "SNOOZED";
+      const remindAt =
+        request.body.remindAt === undefined ? undefined : String(request.body.remindAt);
+
+      if (!["OPEN", "DONE", "IGNORED", "SNOOZED"].includes(status)) {
+        throw new AuthError("status must be OPEN, DONE, IGNORED, or SNOOZED.", 400);
+      }
+
+      const items = await updateFollowUpStatus(user.id, followUpId, status, remindAt);
+      response.json({ items });
+    } catch (error) {
+      next(error);
+    }
   });
 
   router.get("/database/summary", async (_request, response, next) => {

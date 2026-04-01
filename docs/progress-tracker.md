@@ -89,15 +89,15 @@
 
 ## Phase 7: Build Follow-Up Detection
 
-- `not started` Create logic to flag conversations that need attention
-- `not started` Define rules like:
-- `not started` no reply after 24 hours
-- `not started` lead has gone silent
-- `not started` message has a question with no answer
-- `not started` deal is warm but inactive
-- `in progress` Show a list of conversations needing follow-up
-- `in progress` Add a “why this was flagged” explanation
-- `not started` Let the user manually mark items as done, ignored, or snoozed
+- `done` Create logic to flag conversations that need attention
+- `done` Define rules like:
+- `done` no reply after 24 hours
+- `done` lead has gone silent
+- `done` message has a question with no answer
+- `done` deal is warm but inactive
+- `done` Show a list of conversations needing follow-up
+- `done` Add a “why this was flagged” explanation
+- `done` Let the user manually mark items as done, ignored, or snoozed
 
 ## Phase 8: Build AI Drafting
 
@@ -171,9 +171,9 @@
 
 - `done` Test registration and login
 - `done` Test inbox sync
-- `not started` Test stalled conversation detection
+- `done` Test stalled conversation detection
 - `not started` Test follow-up draft generation
-- `not started` Test reminder creation and dismissal
+- `done` Test reminder creation and dismissal
 - `not started` Test editing and sending a draft
 - `not started` Test multiple accounts if supported
 
@@ -213,10 +213,11 @@
 - `done` Phase 4
 - `done` Phase 5
 - `done` Phase 6
-- `not started` Phase 7 onward
+- `done` Phase 7
+- `not started` Phase 8 onward
 
 ## Next Best Move
 
-1. Start Phase 7 follow-up detection on top of synced Gmail conversations.
-2. Replace demo follow-up reads with database-backed queries.
-3. Add authenticated frontend flows on top of the new auth and Gmail APIs.
+1. Start Phase 8 draft generation on top of real follow-up records.
+2. Add authenticated frontend flows on top of the auth, Gmail, and follow-up APIs.
+3. Expand reminder controls in the dashboard.
