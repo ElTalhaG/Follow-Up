@@ -80,12 +80,12 @@
 
 ## Phase 6: Build The Inbox Connection
 
-- `not started` Connect the app to Gmail or Outlook first
-- `not started` Start with read-only access
-- `not started` Sync recent emails and store only what you need
-- `not started` Pull sender, subject, timestamp, and reply status
-- `not started` Keep the first integration simple and reliable
-- `not started` Confirm the app can detect unanswered messages
+- `done` Connect the app to Gmail or Outlook first
+- `done` Start with read-only access
+- `done` Sync recent emails and store only what you need
+- `done` Pull sender, subject, timestamp, and reply status
+- `done` Keep the first integration simple and reliable
+- `done` Confirm the app can detect unanswered messages
 
 ## Phase 7: Build Follow-Up Detection
 
@@ -170,7 +170,7 @@
 ## Phase 14: Test Everything
 
 - `done` Test registration and login
-- `not started` Test inbox sync
+- `done` Test inbox sync
 - `not started` Test stalled conversation detection
 - `not started` Test follow-up draft generation
 - `not started` Test reminder creation and dismissal
@@ -212,10 +212,11 @@
 - `done` Phase 3
 - `done` Phase 4
 - `done` Phase 5
-- `not started` Phase 6 onward
+- `done` Phase 6
+- `not started` Phase 7 onward
 
 ## Next Best Move
 
-1. Start Phase 6 Gmail connection.
+1. Start Phase 7 follow-up detection on top of synced Gmail conversations.
 2. Replace demo follow-up reads with database-backed queries.
-3. Add authenticated frontend flows on top of the new auth API.
+3. Add authenticated frontend flows on top of the new auth and Gmail APIs.

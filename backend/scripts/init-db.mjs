@@ -41,7 +41,11 @@ db.exec(`
     "userId" TEXT NOT NULL,
     "provider" TEXT NOT NULL,
     "providerAccountId" TEXT NOT NULL,
+    "emailAddress" TEXT,
     "accessScope" TEXT NOT NULL,
+    "accessToken" TEXT,
+    "refreshToken" TEXT,
+    "tokenExpiresAt" DATETIME,
     "connectedAt" DATETIME NOT NULL,
     "lastSyncedAt" DATETIME,
     FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE
@@ -122,8 +126,11 @@ const insertUser = db.prepare(`
 `);
 
 const insertAccount = db.prepare(`
-  INSERT INTO "Account" ("id", "userId", "provider", "providerAccountId", "accessScope", "connectedAt", "lastSyncedAt")
-  VALUES (?, ?, ?, ?, ?, ?, ?)
+  INSERT INTO "Account" (
+    "id", "userId", "provider", "providerAccountId", "emailAddress", "accessScope",
+    "accessToken", "refreshToken", "tokenExpiresAt", "connectedAt", "lastSyncedAt"
+  )
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 `);
 
 const insertConversation = db.prepare(`
@@ -169,7 +176,11 @@ insertAccount.run(
   "user_1",
   "gmail",
   "gmail_alex_001",
+  "freelancer@example.com",
   "read-only",
+  "mock_access_token",
+  "mock_refresh_token",
+  "2026-04-01T10:00:00.000Z",
   now,
   "2026-03-27T09:00:00.000Z",
 );

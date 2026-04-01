@@ -53,7 +53,11 @@ model Account {
   userId            String
   provider          String
   providerAccountId String
+  emailAddress      String?
   accessScope       String
+  accessToken       String?
+  refreshToken      String?
+  tokenExpiresAt    DateTime?
   connectedAt       DateTime       @default(now())
   lastSyncedAt      DateTime?
   user              User           @relation(fields: [userId], references: [id], onDelete: Cascade)

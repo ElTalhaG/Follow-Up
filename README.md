@@ -70,6 +70,30 @@ npm run dev:backend
 npm run dev:frontend
 ```
 
+## Gmail Integration
+
+The backend supports a Gmail-first Phase 6 flow with two modes:
+
+- `GMAIL_MOCK_MODE=true` for local development without live Google credentials
+- `GMAIL_MOCK_MODE=false` for real Google OAuth + Gmail read-only sync
+
+Required env vars:
+
+```bash
+AUTH_SECRET=...
+GMAIL_CLIENT_ID=...
+GMAIL_CLIENT_SECRET=...
+```
+
+Current backend Gmail endpoints:
+
+```bash
+GET /api/integrations/gmail/connect-url
+POST /api/integrations/gmail/callback
+GET /api/integrations/gmail/accounts
+POST /api/integrations/gmail/sync
+```
+
 ## Recommended Next Build Steps
 
 1. Lock the target user to freelancers and small agencies.
