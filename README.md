@@ -19,6 +19,8 @@ This repo starts with a simple split between `frontend` and `backend` so we can 
 - [docs/product-spec.md](/Users/talha/Developer/Followup/docs/product-spec.md)
 - [docs/execution-plan.md](/Users/talha/Developer/Followup/docs/execution-plan.md)
 - [docs/data-model.md](/Users/talha/Developer/Followup/docs/data-model.md)
+- [docs/progress-tracker.md](/Users/talha/Developer/Followup/docs/progress-tracker.md)
+- [docs/road-to-revenue.md](/Users/talha/Developer/Followup/docs/road-to-revenue.md)
 
 ## Repo Structure
 
@@ -50,7 +52,7 @@ This repo starts with a simple split between `frontend` and `backend` so we can 
 
 ## Local Development
 
-Dependencies are not installed yet. After we agree on the stack, the next step is:
+Install dependencies:
 
 ```bash
 npm install
@@ -68,6 +70,12 @@ Then we can wire up:
 ```bash
 npm run dev:backend
 npm run dev:frontend
+```
+
+Run tests from the repo root:
+
+```bash
+npm test
 ```
 
 ## Gmail Integration
@@ -95,14 +103,19 @@ GET /api/integrations/gmail/accounts
 POST /api/integrations/gmail/sync
 ```
 
-## Recommended Next Build Steps
+## Current Product Status
 
-1. Lock the target user to freelancers and small agencies.
-2. Implement auth in the backend.
-3. Add Gmail read-only integration.
-4. Detect conversations with no reply after 24 hours.
-5. Show flagged conversations in the dashboard.
-6. Generate one editable follow-up draft per flagged conversation.
+The core MVP build is complete through Phase 16 in [docs/progress-tracker.md](/Users/talha/Developer/Followup/docs/progress-tracker.md).
+
+The next roadmap is now tracked in [docs/road-to-revenue.md](/Users/talha/Developer/Followup/docs/road-to-revenue.md), which covers:
+
+1. production readiness
+2. real Gmail OAuth
+3. hosted staging
+4. trust and operations
+5. private beta
+6. monetization
+7. first revenue
 
 © 2026 Followup. All rights reserved. No part of this publication may be reproduced, distributed, or transmitted in any form or by any means, including photocopying, recording, or other electronic or mechanical methods, without the prior written permission of the copyright owner, except in the case of brief quotations embodied in critical reviews and certain other noncommercial uses permitted by copyright law.
 Contact me on Instagram for enqueries = eltalhag
