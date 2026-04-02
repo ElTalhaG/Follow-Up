@@ -18,6 +18,13 @@ type AuthMode = "login" | "register";
 type DraftsByFollowUp = Record<string, DraftRecord[]>;
 type DraftEditors = Record<string, string>;
 type ConversationNotes = Record<string, string>;
+type WorkspaceData = {
+  followUps: FollowUpItem[];
+  conversations: ConversationItem[];
+  reminders: ReminderItem[];
+  tasks: TaskSummary;
+  analytics: AnalyticsSummary;
+};
 
 function formatPriority(priority: FollowUpItem["priority"]) {
   return priority.charAt(0).toUpperCase() + priority.slice(1);
@@ -89,27 +96,62 @@ export function DashboardShell() {
     void hydrateDashboard(session.token);
   }, [session]);
 
-  async function hydrateDashboard(token: string) {
-    try {
-      setIsBusy(true);
-      const [accountsResponse, followUpsResponse, conversationsResponse, remindersResponse, analyticsResponse] =
-        await Promise.all([
-        api.listGmailAccounts(token),
+  function mergeConversationNotes(items: ConversationItem[]) {
+    return Object.fromEntries(items.map((item) => [item.id, item.notes ?? ""]));
+  }
+
+  function applyWorkspaceData(data: WorkspaceData) {
+    setFollowUps(data.followUps);
+    setConversations(data.conversations);
+    setConversationNotes((current) => ({
+      ...current,
+      ...mergeConversationNotes(data.conversations),
+    }));
+    setReminders(data.reminders);
+    setTaskSummary(data.tasks);
+    setAnalytics(data.analytics);
+  }
+
+  async function loadWorkspaceData(token: string) {
+    const [followUpsResponse, conversationsResponse, remindersResponse, analyticsResponse] =
+      await Promise.all([
         api.listFollowUps(token),
         api.listConversations(token),
         api.listReminders(token),
         api.getAnalytics(token),
       ]);
 
+    return {
+      followUps: followUpsResponse.items,
+      conversations: conversationsResponse.items,
+      reminders: remindersResponse.items,
+      tasks: remindersResponse.tasks,
+      analytics: analyticsResponse,
+    } satisfies WorkspaceData;
+  }
+
+  function resetWorkspace() {
+    setAccounts([]);
+    setConversations([]);
+    setFollowUps([]);
+    setReminders([]);
+    setTaskSummary({ open: 0, done: 0, canceled: 0 });
+    setAnalytics(null);
+    setDraftHistory({});
+    setDraftEditors({});
+    setConversationNotes({});
+  }
+
+  async function hydrateDashboard(token: string) {
+    try {
+      setIsBusy(true);
+      const [accountsResponse, workspace] = await Promise.all([
+        api.listGmailAccounts(token),
+        loadWorkspaceData(token),
+      ]);
+
       setAccounts(accountsResponse.items);
-      setFollowUps(followUpsResponse.items);
-      setConversations(conversationsResponse.items);
-      setConversationNotes(
-        Object.fromEntries(conversationsResponse.items.map((item) => [item.id, item.notes ?? ""])),
-      );
-      setReminders(remindersResponse.items);
-      setTaskSummary(remindersResponse.tasks);
-      setAnalytics(analyticsResponse);
+      applyWorkspaceData(workspace);
       setStatusMessage("Dashboard synced from the real backend.");
     } catch (error) {
       setStatusMessage(error instanceof Error ? error.message : "Failed to load dashboard.");
@@ -182,21 +224,14 @@ export function DashboardShell() {
 
     try {
       const syncResult = await api.syncGmail(session.token, accounts[0].id);
-      const [refreshed, conversationsResponse, remindersResponse, analyticsResponse] = await Promise.all([
+      const [refreshed, workspace] = await Promise.all([
         api.refreshFollowUps(session.token),
-        api.listConversations(session.token),
-        api.listReminders(session.token),
-        api.getAnalytics(session.token),
+        loadWorkspaceData(session.token),
       ]);
-      setFollowUps(refreshed.items);
-      setConversations(conversationsResponse.items);
-      setConversationNotes((current) => ({
-        ...current,
-        ...Object.fromEntries(conversationsResponse.items.map((item) => [item.id, item.notes ?? ""])),
-      }));
-      setReminders(remindersResponse.items);
-      setTaskSummary(remindersResponse.tasks);
-      setAnalytics(analyticsResponse);
+      applyWorkspaceData({
+        ...workspace,
+        followUps: refreshed.items,
+      });
       setStatusMessage(
         `Synced ${syncResult.syncedThreads} threads and ${syncResult.syncedMessages} messages from Gmail.`,
       );
@@ -219,21 +254,14 @@ export function DashboardShell() {
     setIsBusy(true);
 
     try {
-      const [response, conversationsResponse, remindersResponse, analyticsResponse] = await Promise.all([
+      const [response, workspace] = await Promise.all([
         api.refreshFollowUps(session.token),
-        api.listConversations(session.token),
-        api.listReminders(session.token),
-        api.getAnalytics(session.token),
+        loadWorkspaceData(session.token),
       ]);
-      setFollowUps(response.items);
-      setConversations(conversationsResponse.items);
-      setConversationNotes((current) => ({
-        ...current,
-        ...Object.fromEntries(conversationsResponse.items.map((item) => [item.id, item.notes ?? ""])),
-      }));
-      setReminders(remindersResponse.items);
-      setTaskSummary(remindersResponse.tasks);
-      setAnalytics(analyticsResponse);
+      applyWorkspaceData({
+        ...workspace,
+        followUps: response.items,
+      });
       setStatusMessage(`Refreshed ${response.items.length} follow-ups.`);
     } catch (error) {
       setStatusMessage(error instanceof Error ? error.message : "Failed to refresh follow-ups.");
@@ -257,21 +285,7 @@ export function DashboardShell() {
         ...current,
         [followUpId]: history.items[0]?.content ?? "",
       }));
-      const [list, conversationsResponse, remindersResponse, analyticsResponse] = await Promise.all([
-        api.listFollowUps(session.token),
-        api.listConversations(session.token),
-        api.listReminders(session.token),
-        api.getAnalytics(session.token),
-      ]);
-      setFollowUps(list.items);
-      setConversations(conversationsResponse.items);
-      setConversationNotes((current) => ({
-        ...current,
-        ...Object.fromEntries(conversationsResponse.items.map((item) => [item.id, item.notes ?? ""])),
-      }));
-      setReminders(remindersResponse.items);
-      setTaskSummary(remindersResponse.tasks);
-      setAnalytics(analyticsResponse);
+      applyWorkspaceData(await loadWorkspaceData(session.token));
       setStatusMessage(`Generated a ${tone} draft.`);
     } catch (error) {
       setStatusMessage(
@@ -320,21 +334,7 @@ export function DashboardShell() {
       await api.updateDraft(session.token, currentDraft.id, content);
       const history = await api.listDrafts(session.token, followUpId);
       setDraftHistory((current) => ({ ...current, [followUpId]: history.items }));
-      const [list, conversationsResponse, remindersResponse, analyticsResponse] = await Promise.all([
-        api.listFollowUps(session.token),
-        api.listConversations(session.token),
-        api.listReminders(session.token),
-        api.getAnalytics(session.token),
-      ]);
-      setFollowUps(list.items);
-      setConversations(conversationsResponse.items);
-      setConversationNotes((current) => ({
-        ...current,
-        ...Object.fromEntries(conversationsResponse.items.map((item) => [item.id, item.notes ?? ""])),
-      }));
-      setReminders(remindersResponse.items);
-      setTaskSummary(remindersResponse.tasks);
-      setAnalytics(analyticsResponse);
+      applyWorkspaceData(await loadWorkspaceData(session.token));
       setStatusMessage("Draft edits saved.");
     } catch (error) {
       setStatusMessage(error instanceof Error ? error.message : "Failed to save draft.");
@@ -358,20 +358,11 @@ export function DashboardShell() {
         status,
         remindAt: status === "SNOOZED" ? `${DEFAULT_SNOOZE_DATE}:00.000Z` : undefined,
       });
-      const [conversationsResponse, remindersResponse] = await Promise.all([
-        api.listConversations(session.token),
-        api.listReminders(session.token),
-      ]);
-      const analyticsResponse = await api.getAnalytics(session.token);
-      setFollowUps(response.items);
-      setConversations(conversationsResponse.items);
-      setConversationNotes((current) => ({
-        ...current,
-        ...Object.fromEntries(conversationsResponse.items.map((item) => [item.id, item.notes ?? ""])),
-      }));
-      setReminders(remindersResponse.items);
-      setTaskSummary(remindersResponse.tasks);
-      setAnalytics(analyticsResponse);
+      const workspace = await loadWorkspaceData(session.token);
+      applyWorkspaceData({
+        ...workspace,
+        followUps: response.items,
+      });
       setStatusMessage(
         status === "DONE"
           ? "Marked follow-up as done."
@@ -398,11 +389,8 @@ export function DashboardShell() {
 
     try {
       await api.createReminder(session.token, conversationId, { preset });
-      const remindersResponse = await api.listReminders(session.token);
-      const analyticsResponse = await api.getAnalytics(session.token);
-      setReminders(remindersResponse.items);
-      setTaskSummary(remindersResponse.tasks);
-      setAnalytics(analyticsResponse);
+      const workspace = await loadWorkspaceData(session.token);
+      applyWorkspaceData(workspace);
       setStatusMessage(
         preset === "later_today"
           ? "Reminder set for later today."
@@ -426,10 +414,12 @@ export function DashboardShell() {
 
     try {
       const response = await api.dismissReminder(session.token, reminderId);
-      const analyticsResponse = await api.getAnalytics(session.token);
-      setReminders(response.items);
-      setTaskSummary(response.tasks);
-      setAnalytics(analyticsResponse);
+      const workspace = await loadWorkspaceData(session.token);
+      applyWorkspaceData({
+        ...workspace,
+        reminders: response.items,
+        tasks: response.tasks,
+      });
       setStatusMessage("Reminder dismissed.");
     } catch (error) {
       setStatusMessage(error instanceof Error ? error.message : "Failed to dismiss reminder.");
@@ -440,15 +430,7 @@ export function DashboardShell() {
 
   function signOut() {
     setSession(null);
-    setAccounts([]);
-    setConversations([]);
-    setFollowUps([]);
-    setReminders([]);
-    setTaskSummary({ open: 0, done: 0, canceled: 0 });
-    setAnalytics(null);
-    setDraftHistory({});
-    setDraftEditors({});
-    setConversationNotes({});
+    resetWorkspace();
     window.localStorage.removeItem("followup-session");
     setStatusMessage("Signed out.");
   }

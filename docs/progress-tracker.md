@@ -179,11 +179,11 @@
 
 ## Phase 15: Refactor The Code
 
-- `not started` Separate UI, business logic, and data access
-- `not started` Extract integration code into reusable services
-- `not started` Keep AI prompting logic isolated
-- `not started` Clean up duplicated message-processing code
-- `not started` Rename unclear methods and tables
+- `done` Separate UI, business logic, and data access
+- `done` Extract integration code into reusable services
+- `done` Keep AI prompting logic isolated
+- `done` Clean up duplicated message-processing code
+- `done` Rename unclear methods and tables
 
 ## Phase 16: Final Polish
 
@@ -221,10 +221,11 @@
 - `done` Phase 12
 - `done` Phase 13
 - `done` Phase 14
-- `not started` Phase 15 onward
+- `done` Phase 15
+- `not started` Phase 16 onward
 
 ## Next Best Move
 
-1. Start Phase 15 refactoring by separating repeated dashboard hydration and backend workflow helpers.
+1. Move into Phase 16 with better loading states, clearer onboarding, and a polished demo flow.
 2. Add authenticated frontend polish for connect, sync, refresh, draft generation, and draft editing.
 3. Add support for multiple connected accounts when we expand testing.

@@ -115,6 +115,12 @@ type DetectionResult = {
   priority: "high" | "medium" | "low";
 };
 
+type DashboardSnapshot = {
+  conversations: ConversationRecord[];
+  followUps: FollowUpListItem[];
+  analytics: AnalyticsSummary;
+};
+
 function hoursBetween(earlier: Date, later = new Date()) {
   return (later.getTime() - earlier.getTime()) / (1000 * 60 * 60);
 }
@@ -151,6 +157,61 @@ function buildSuggestedDraft(conversation: ConversationRecord) {
   }
 
   return `${greeting} checking back in on "${conversation.subject}". If the timing still works on your side, I can keep things moving with a simple next step.`;
+}
+
+function getLatestFollowUp(conversation: ConversationRecord) {
+  return conversation.followUps[0];
+}
+
+function getActiveReminder(conversation: ConversationRecord) {
+  return conversation.reminders.find((item) => item.status === "ACTIVE");
+}
+
+function serializeConversation(conversation: ConversationRecord) {
+  const latestMessage = conversation.messages[conversation.messages.length - 1];
+
+  return {
+    id: conversation.id,
+    subject: conversation.subject,
+    contactName: conversation.contactName,
+    contactEmail: conversation.contactEmail,
+    notes: conversation.notes,
+    status: normalizeStatus(conversation.status),
+    needsFollowUp: conversation.needsFollowUp,
+    followUpReason: conversation.followUpReason,
+    lastMessageAt: conversation.lastMessageAt.toISOString(),
+    lastInboundAt: conversation.lastInboundAt?.toISOString() ?? null,
+    lastOutboundAt: conversation.lastOutboundAt?.toISOString() ?? null,
+    originalMessage: conversation.messages[0]?.bodyExcerpt ?? "",
+    latestMessage: latestMessage?.bodyExcerpt ?? "",
+    latestDirection: toLatestDirection(latestMessage?.direction),
+  } satisfies ConversationListItem;
+}
+
+function serializeFollowUp(conversation: ConversationRecord) {
+  const latestFollowUp = getLatestFollowUp(conversation);
+
+  if (!latestFollowUp) {
+    return null;
+  }
+
+  const activeReminder = getActiveReminder(conversation);
+
+  return {
+    id: latestFollowUp.id,
+    conversationId: conversation.id,
+    subject: conversation.subject,
+    contactName: conversation.contactName,
+    contactEmail: conversation.contactEmail,
+    status: normalizeStatus(conversation.status),
+    priority: latestFollowUp.priority as FollowUpListItem["priority"],
+    followUpReason: latestFollowUp.reason,
+    suggestedDraft:
+      latestFollowUp.drafts?.[0]?.content ?? buildSuggestedDraft(conversation),
+    actionStatus: toActionStatus(latestFollowUp.status),
+    remindAt: activeReminder?.remindAt.toISOString() ?? null,
+    lastMessageAt: conversation.lastMessageAt.toISOString(),
+  } satisfies FollowUpListItem;
 }
 
 function roundHours(value: number | null) {
@@ -331,6 +392,25 @@ async function getUserConversations(userId: string) {
   })) as ConversationRecord[];
 }
 
+async function getDashboardSnapshot(userId: string) {
+  const conversations = await getUserConversations(userId);
+
+  return {
+    conversations,
+    followUps: conversations
+      .map(serializeFollowUp)
+      .filter((item): item is FollowUpListItem => Boolean(item))
+      .sort((left, right) => {
+        const priorityOrder = { high: 0, medium: 1, low: 2 };
+        return (
+          priorityOrder[left.priority] - priorityOrder[right.priority] ||
+          right.lastMessageAt.localeCompare(left.lastMessageAt)
+        );
+      }),
+    analytics: buildAnalyticsSummary(conversations),
+  } satisfies DashboardSnapshot;
+}
+
 export async function refreshFollowUps(userId: string) {
   const conversations = await getUserConversations(userId);
   const followUpDelegate = prisma.followUp as any;
@@ -340,7 +420,7 @@ export async function refreshFollowUps(userId: string) {
 
   for (const conversation of conversations) {
     const detection = detectFollowUpNeed(conversation);
-    const latestFollowUp = conversation.followUps[0];
+    const latestFollowUp = getLatestFollowUp(conversation);
 
     await conversationDelegate.update({
       where: { id: conversation.id },
@@ -404,7 +484,7 @@ export async function refreshFollowUps(userId: string) {
       });
     }
 
-    const activeReminder = conversation.reminders.find((item) => item.status === "ACTIVE");
+    const activeReminder = getActiveReminder(conversation);
     const openTask = conversation.tasks?.find((task) => task.status === "OPEN");
 
     if (!activeReminder) {
@@ -444,62 +524,13 @@ export async function refreshFollowUps(userId: string) {
 }
 
 export async function listFollowUps(userId: string) {
-  const conversations = await getUserConversations(userId);
-
-  return conversations
-    .filter((conversation) => conversation.followUps.length > 0)
-    .map((conversation) => {
-      const latestFollowUp = conversation.followUps[0];
-      const activeReminder = conversation.reminders.find((item) => item.status === "ACTIVE");
-
-      return {
-        id: latestFollowUp.id,
-        conversationId: conversation.id,
-        subject: conversation.subject,
-        contactName: conversation.contactName,
-        contactEmail: conversation.contactEmail,
-        status: normalizeStatus(conversation.status),
-        priority: latestFollowUp.priority as FollowUpListItem["priority"],
-        followUpReason: latestFollowUp.reason,
-        suggestedDraft:
-          latestFollowUp.drafts?.[0]?.content ?? buildSuggestedDraft(conversation),
-        actionStatus: toActionStatus(latestFollowUp.status),
-        remindAt: activeReminder?.remindAt.toISOString() ?? null,
-        lastMessageAt: conversation.lastMessageAt.toISOString(),
-      } satisfies FollowUpListItem;
-    })
-    .sort((left, right) => {
-      const priorityOrder = { high: 0, medium: 1, low: 2 };
-      return (
-        priorityOrder[left.priority] - priorityOrder[right.priority] ||
-        right.lastMessageAt.localeCompare(left.lastMessageAt)
-      );
-    });
+  const snapshot = await getDashboardSnapshot(userId);
+  return snapshot.followUps;
 }
 
 export async function listConversations(userId: string) {
-  const conversations = await getUserConversations(userId);
-
-  return conversations.map((conversation) => {
-    const latestMessage = conversation.messages[conversation.messages.length - 1];
-
-    return {
-      id: conversation.id,
-      subject: conversation.subject,
-      contactName: conversation.contactName,
-      contactEmail: conversation.contactEmail,
-      notes: conversation.notes,
-      status: normalizeStatus(conversation.status),
-      needsFollowUp: conversation.needsFollowUp,
-      followUpReason: conversation.followUpReason,
-      lastMessageAt: conversation.lastMessageAt.toISOString(),
-      lastInboundAt: conversation.lastInboundAt?.toISOString() ?? null,
-      lastOutboundAt: conversation.lastOutboundAt?.toISOString() ?? null,
-      originalMessage: conversation.messages[0]?.bodyExcerpt ?? "",
-      latestMessage: latestMessage?.bodyExcerpt ?? "",
-      latestDirection: toLatestDirection(latestMessage?.direction),
-    } satisfies ConversationListItem;
-  });
+  const snapshot = await getDashboardSnapshot(userId);
+  return snapshot.conversations.map(serializeConversation);
 }
 
 export async function updateConversationNotes(
@@ -533,8 +564,7 @@ export async function updateConversationNotes(
   return listConversations(userId);
 }
 
-export async function getAnalyticsSummary(userId: string) {
-  const conversations = await getUserConversations(userId);
+function buildAnalyticsSummary(conversations: ConversationRecord[]) {
   const { start: currentStart, end: currentEnd } = getWeekWindow();
   const { start: previousStart, end: previousEnd } = getPreviousWeekWindow(currentStart);
 
@@ -599,6 +629,11 @@ export async function getAnalyticsSummary(userId: string) {
     weeklySummary: buildWeeklySummary(metrics),
     activeLeads,
   } satisfies AnalyticsSummary;
+}
+
+export async function getAnalyticsSummary(userId: string) {
+  const snapshot = await getDashboardSnapshot(userId);
+  return snapshot.analytics;
 }
 
 export async function updateFollowUpStatus(
