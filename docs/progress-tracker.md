@@ -136,14 +136,14 @@
 
 ## Phase 11: Improve Message Context
 
-- `not started` Show the original message and the latest activity together
-- `not started` Display conversation status:
-- `not started` new
-- `not started` waiting
-- `not started` overdue
-- `not started` closed
-- `not started` Show basic customer or lead notes
-- `not started` Let the user add manual notes to a conversation
+- `done` Show the original message and the latest activity together
+- `done` Display conversation status:
+- `done` new
+- `done` waiting
+- `done` overdue
+- `done` closed
+- `done` Show basic customer or lead notes
+- `done` Let the user add manual notes to a conversation
 - `done` Make it easy to understand why something needs action
 
 ## Phase 12: Add Basic Analytics
@@ -217,10 +217,11 @@
 - `done` Phase 8
 - `done` Phase 9
 - `done` Phase 10
-- `not started` Phase 11 onward
+- `done` Phase 11
+- `not started` Phase 12 onward
 
 ## Next Best Move
 
-1. Start Phase 11 message context improvements inside the dashboard.
+1. Start Phase 12 analytics with lightweight weekly summaries and value metrics.
 2. Add authenticated frontend polish for connect, sync, refresh, draft generation, and draft editing.
 3. Add support for multiple connected accounts when we expand testing.

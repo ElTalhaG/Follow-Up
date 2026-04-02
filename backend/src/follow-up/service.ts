@@ -21,13 +21,16 @@ type ConversationListItem = {
   subject: string;
   contactName: string | null;
   contactEmail: string;
+  notes: string | null;
   status: "new" | "waiting" | "overdue" | "closed";
   needsFollowUp: boolean;
   followUpReason: string | null;
   lastMessageAt: string;
   lastInboundAt: string | null;
   lastOutboundAt: string | null;
+  originalMessage: string;
   latestMessage: string;
+  latestDirection: "inbound" | "outbound" | "unknown";
 };
 
 type FollowUpAction = "OPEN" | "DONE" | "IGNORED" | "SNOOZED";
@@ -37,6 +40,7 @@ type ConversationRecord = {
   subject: string;
   contactName: string | null;
   contactEmail: string;
+  notes: string | null;
   status: "NEW" | "WAITING" | "OVERDUE" | "CLOSED";
   lastMessageAt: Date;
   lastInboundAt: Date | null;
@@ -98,6 +102,20 @@ function normalizeStatus(status: ConversationRecord["status"]) {
 
 function toActionStatus(status: FollowUpAction) {
   return status.toLowerCase() as FollowUpListItem["actionStatus"];
+}
+
+function toLatestDirection(
+  direction: ConversationRecord["messages"][number]["direction"] | undefined,
+) {
+  if (direction === "INBOUND") {
+    return "inbound" as const;
+  }
+
+  if (direction === "OUTBOUND") {
+    return "outbound" as const;
+  }
+
+  return "unknown" as const;
 }
 
 function buildSuggestedDraft(conversation: ConversationRecord) {
@@ -371,15 +389,49 @@ export async function listConversations(userId: string) {
       subject: conversation.subject,
       contactName: conversation.contactName,
       contactEmail: conversation.contactEmail,
+      notes: conversation.notes,
       status: normalizeStatus(conversation.status),
       needsFollowUp: conversation.needsFollowUp,
       followUpReason: conversation.followUpReason,
       lastMessageAt: conversation.lastMessageAt.toISOString(),
       lastInboundAt: conversation.lastInboundAt?.toISOString() ?? null,
       lastOutboundAt: conversation.lastOutboundAt?.toISOString() ?? null,
+      originalMessage: conversation.messages[0]?.bodyExcerpt ?? "",
       latestMessage: latestMessage?.bodyExcerpt ?? "",
+      latestDirection: toLatestDirection(latestMessage?.direction),
     } satisfies ConversationListItem;
   });
+}
+
+export async function updateConversationNotes(
+  userId: string,
+  conversationId: string,
+  notes: string,
+) {
+  const conversationDelegate = prisma.conversation as any;
+  const conversation = await conversationDelegate.findUnique({
+    where: { id: conversationId },
+    include: {
+      account: {
+        select: {
+          userId: true,
+        },
+      },
+    },
+  });
+
+  if (!conversation || conversation.account.userId !== userId) {
+    throw new AuthError("Conversation not found.", 404);
+  }
+
+  await conversationDelegate.update({
+    where: { id: conversationId },
+    data: {
+      notes: notes.trim() || null,
+    },
+  });
+
+  return listConversations(userId);
 }
 
 export async function updateFollowUpStatus(

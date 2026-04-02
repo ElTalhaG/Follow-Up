@@ -62,6 +62,7 @@ db.exec(`
     "subject" TEXT NOT NULL,
     "contactName" TEXT,
     "contactEmail" TEXT NOT NULL,
+    "notes" TEXT,
     "status" TEXT NOT NULL,
     "lastMessageAt" DATETIME NOT NULL,
     "lastInboundAt" DATETIME,
@@ -145,9 +146,9 @@ const insertAccount = db.prepare(`
 
 const insertConversation = db.prepare(`
   INSERT INTO "Conversation" (
-    "id", "accountId", "externalThreadId", "subject", "contactName", "contactEmail", "status",
+    "id", "accountId", "externalThreadId", "subject", "contactName", "contactEmail", "notes", "status",
     "lastMessageAt", "lastInboundAt", "lastOutboundAt", "needsFollowUp", "followUpReason", "createdAt", "updatedAt"
-  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 `);
 
 const insertMessage = db.prepare(`
@@ -207,6 +208,7 @@ insertConversation.run(
   "Website redesign inquiry",
   "Maya Jensen",
   "maya@example.com",
+  "Warm portfolio lead. Interested in a redesign next week.",
   "OVERDUE",
   "2026-03-26T02:00:00.000Z",
   "2026-03-26T02:00:00.000Z",
@@ -224,6 +226,7 @@ insertConversation.run(
   "Monthly retainer follow-up",
   "North Studio",
   "team@northstudio.example",
+  "Agency prospect asking about ongoing ad creative support.",
   "WAITING",
   "2026-03-22T10:00:00.000Z",
   "2026-03-20T14:00:00.000Z",
@@ -241,6 +244,7 @@ insertConversation.run(
   "Coaching package confirmed",
   "Lina Boyd",
   "lina@example.com",
+  "Closed-won coaching customer.",
   "CLOSED",
   "2026-03-25T15:30:00.000Z",
   "2026-03-25T15:30:00.000Z",

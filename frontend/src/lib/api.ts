@@ -45,13 +45,16 @@ export type ConversationItem = {
   subject: string;
   contactName: string | null;
   contactEmail: string;
+  notes: string | null;
   status: "new" | "waiting" | "overdue" | "closed";
   needsFollowUp: boolean;
   followUpReason: string | null;
   lastMessageAt: string;
   lastInboundAt: string | null;
   lastOutboundAt: string | null;
+  originalMessage: string;
   latestMessage: string;
+  latestDirection: "inbound" | "outbound" | "unknown";
 };
 
 export type ReminderItem = {
@@ -159,6 +162,16 @@ export const api = {
   },
   listConversations(token: string) {
     return request<{ items: ConversationItem[] }>("/conversations", {}, token);
+  },
+  updateConversationNotes(token: string, conversationId: string, notes: string) {
+    return request<{ items: ConversationItem[] }>(
+      `/conversations/${conversationId}/notes`,
+      {
+        method: "PATCH",
+        body: JSON.stringify({ notes }),
+      },
+      token,
+    );
   },
   updateFollowUpStatus(
     token: string,

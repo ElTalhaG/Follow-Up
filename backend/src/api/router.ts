@@ -16,6 +16,7 @@ import {
   listConversations,
   listFollowUps,
   refreshFollowUps,
+  updateConversationNotes,
   updateFollowUpStatus,
 } from "../follow-up/service.js";
 import { generateDraft, listDraftHistory, updateDraftContent } from "../follow-up/drafts.js";
@@ -86,6 +87,19 @@ export function buildRouter() {
     try {
       const user = await getUserFromBearerToken(request.headers.authorization);
       const items = await listConversations(user.id);
+
+      response.json({ items });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  router.patch("/conversations/:conversationId/notes", async (request, response, next) => {
+    try {
+      const user = await getUserFromBearerToken(request.headers.authorization);
+      const conversationId = String(request.params.conversationId ?? "");
+      const notes = String(request.body.notes ?? "");
+      const items = await updateConversationNotes(user.id, conversationId, notes);
 
       response.json({ items });
     } catch (error) {

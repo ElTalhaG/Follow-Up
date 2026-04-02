@@ -73,6 +73,7 @@ model Conversation {
   subject          String
   contactName      String?
   contactEmail     String
+  notes            String?
   status           ConversationStatus
   lastMessageAt    DateTime
   lastInboundAt    DateTime?

@@ -16,6 +16,7 @@ const DEFAULT_SNOOZE_DATE = "2026-04-03T09:00";
 type AuthMode = "login" | "register";
 type DraftsByFollowUp = Record<string, DraftRecord[]>;
 type DraftEditors = Record<string, string>;
+type ConversationNotes = Record<string, string>;
 
 function formatPriority(priority: FollowUpItem["priority"]) {
   return priority.charAt(0).toUpperCase() + priority.slice(1);
@@ -53,6 +54,7 @@ export function DashboardShell() {
   });
   const [draftHistory, setDraftHistory] = useState<DraftsByFollowUp>({});
   const [draftEditors, setDraftEditors] = useState<DraftEditors>({});
+  const [conversationNotes, setConversationNotes] = useState<ConversationNotes>({});
   const [statusMessage, setStatusMessage] = useState("Sign in to unlock Gmail sync and follow-up actions.");
   const [isBusy, setIsBusy] = useState(false);
 
@@ -99,6 +101,9 @@ export function DashboardShell() {
       setAccounts(accountsResponse.items);
       setFollowUps(followUpsResponse.items);
       setConversations(conversationsResponse.items);
+      setConversationNotes(
+        Object.fromEntries(conversationsResponse.items.map((item) => [item.id, item.notes ?? ""])),
+      );
       setReminders(remindersResponse.items);
       setTaskSummary(remindersResponse.tasks);
       setStatusMessage("Dashboard synced from the real backend.");
@@ -176,6 +181,10 @@ export function DashboardShell() {
       ]);
       setFollowUps(refreshed.items);
       setConversations(conversationsResponse.items);
+      setConversationNotes((current) => ({
+        ...current,
+        ...Object.fromEntries(conversationsResponse.items.map((item) => [item.id, item.notes ?? ""])),
+      }));
       setReminders(remindersResponse.items);
       setTaskSummary(remindersResponse.tasks);
       setStatusMessage(
@@ -203,6 +212,10 @@ export function DashboardShell() {
       ]);
       setFollowUps(response.items);
       setConversations(conversationsResponse.items);
+      setConversationNotes((current) => ({
+        ...current,
+        ...Object.fromEntries(conversationsResponse.items.map((item) => [item.id, item.notes ?? ""])),
+      }));
       setReminders(remindersResponse.items);
       setTaskSummary(remindersResponse.tasks);
       setStatusMessage(`Refreshed ${response.items.length} follow-ups.`);
@@ -235,6 +248,10 @@ export function DashboardShell() {
       ]);
       setFollowUps(list.items);
       setConversations(conversationsResponse.items);
+      setConversationNotes((current) => ({
+        ...current,
+        ...Object.fromEntries(conversationsResponse.items.map((item) => [item.id, item.notes ?? ""])),
+      }));
       setReminders(remindersResponse.items);
       setTaskSummary(remindersResponse.tasks);
       setStatusMessage(`Generated a ${tone} draft.`);
@@ -288,6 +305,10 @@ export function DashboardShell() {
       ]);
       setFollowUps(list.items);
       setConversations(conversationsResponse.items);
+      setConversationNotes((current) => ({
+        ...current,
+        ...Object.fromEntries(conversationsResponse.items.map((item) => [item.id, item.notes ?? ""])),
+      }));
       setReminders(remindersResponse.items);
       setTaskSummary(remindersResponse.tasks);
       setStatusMessage("Draft edits saved.");
@@ -319,6 +340,10 @@ export function DashboardShell() {
       ]);
       setFollowUps(response.items);
       setConversations(conversationsResponse.items);
+      setConversationNotes((current) => ({
+        ...current,
+        ...Object.fromEntries(conversationsResponse.items.map((item) => [item.id, item.notes ?? ""])),
+      }));
       setReminders(remindersResponse.items);
       setTaskSummary(remindersResponse.tasks);
       setStatusMessage(
@@ -392,8 +417,35 @@ export function DashboardShell() {
     setTaskSummary({ open: 0, done: 0, canceled: 0 });
     setDraftHistory({});
     setDraftEditors({});
+    setConversationNotes({});
     window.localStorage.removeItem("followup-session");
     setStatusMessage("Signed out.");
+  }
+
+  async function handleSaveConversationNotes(conversationId: string) {
+    if (!session) {
+      return;
+    }
+
+    setIsBusy(true);
+
+    try {
+      const response = await api.updateConversationNotes(
+        session.token,
+        conversationId,
+        conversationNotes[conversationId] ?? "",
+      );
+      setConversations(response.items);
+      setConversationNotes((current) => ({
+        ...current,
+        ...Object.fromEntries(response.items.map((item) => [item.id, item.notes ?? ""])),
+      }));
+      setStatusMessage("Conversation notes saved.");
+    } catch (error) {
+      setStatusMessage(error instanceof Error ? error.message : "Failed to save notes.");
+    } finally {
+      setIsBusy(false);
+    }
   }
 
   return (
@@ -678,12 +730,50 @@ export function DashboardShell() {
                           {conversation.status}
                         </span>
                       </div>
-                      <p>{conversation.latestMessage}</p>
+                      <div className="context-grid">
+                        <div className="context-block">
+                          <strong>Original message</strong>
+                          <p>{conversation.originalMessage || "No original message available."}</p>
+                        </div>
+                        <div className="context-block">
+                          <strong>Latest activity</strong>
+                          <p>{conversation.latestMessage || "No recent message available."}</p>
+                          <p className="helper-copy">
+                            {conversation.latestDirection === "inbound"
+                              ? "Latest direction: inbound"
+                              : conversation.latestDirection === "outbound"
+                                ? "Latest direction: outbound"
+                                : "Latest direction unavailable"}
+                          </p>
+                        </div>
+                      </div>
                       <p className="helper-copy">
                         {conversation.followUpReason
                           ? conversation.followUpReason
                           : `Latest activity: ${formatDate(conversation.lastMessageAt)}`}
                       </p>
+                      <div className="notes-box">
+                        <strong>Lead notes</strong>
+                        <textarea
+                          className="notes-editor"
+                          value={conversationNotes[conversation.id] ?? conversation.notes ?? ""}
+                          onChange={(event) =>
+                            setConversationNotes((current) => ({
+                              ...current,
+                              [conversation.id]: event.target.value,
+                            }))
+                          }
+                        />
+                        <div className="button-row compact">
+                          <button
+                            className="ghost-button"
+                            disabled={isBusy}
+                            onClick={() => handleSaveConversationNotes(conversation.id)}
+                          >
+                            Save notes
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   ))}
                 </div>

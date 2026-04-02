@@ -171,6 +171,7 @@ body::before {
 }
 
 .draft-editor,
+.notes-editor,
 .field input {
   width: 100%;
   border: 1px solid var(--line);
@@ -186,6 +187,13 @@ body::before {
   margin: 12px 0;
   resize: vertical;
   line-height: 1.6;
+}
+
+.notes-editor {
+  min-height: 92px;
+  margin: 10px 0 0;
+  resize: vertical;
+  line-height: 1.5;
 }
 
 .auth-form,
@@ -285,6 +293,26 @@ body::before {
   display: grid;
   gap: 10px;
   margin-top: 14px;
+}
+
+.context-grid {
+  display: grid;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.context-block,
+.notes-box {
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.54);
+}
+
+.context-block strong,
+.notes-box strong {
+  display: block;
+  margin-bottom: 6px;
 }
 
 .history-item {
