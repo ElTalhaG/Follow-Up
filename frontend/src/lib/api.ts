@@ -74,6 +74,27 @@ export type TaskSummary = {
   canceled: number;
 };
 
+export type AnalyticsSummary = {
+  metrics: {
+    followUpsSuggested: number;
+    followUpsSent: number;
+    remindersCompleted: number;
+    averageReplyHours: number | null;
+    responseTimeChange: "faster" | "slower" | "steady" | "new";
+    responseTimeDeltaHours: number | null;
+  };
+  weeklySummary: string;
+  activeLeads: Array<{
+    conversationId: string;
+    subject: string;
+    contactName: string | null;
+    contactEmail: string;
+    status: "new" | "waiting" | "overdue" | "closed";
+    messageCount: number;
+    lastMessageAt: string;
+  }>;
+};
+
 async function request<T>(path: string, options: RequestInit = {}, token?: string) {
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...options,
@@ -212,6 +233,9 @@ export const api = {
   },
   listReminders(token: string) {
     return request<{ items: ReminderItem[]; tasks: TaskSummary }>("/reminders", {}, token);
+  },
+  getAnalytics(token: string) {
+    return request<AnalyticsSummary>("/analytics", {}, token);
   },
   createReminder(
     token: string,

@@ -16,6 +16,27 @@ type FollowUpListItem = {
   lastMessageAt: string;
 };
 
+type AnalyticsSummary = {
+  metrics: {
+    followUpsSuggested: number;
+    followUpsSent: number;
+    remindersCompleted: number;
+    averageReplyHours: number | null;
+    responseTimeChange: "faster" | "slower" | "steady" | "new";
+    responseTimeDeltaHours: number | null;
+  };
+  weeklySummary: string;
+  activeLeads: Array<{
+    conversationId: string;
+    subject: string;
+    contactName: string | null;
+    contactEmail: string;
+    status: "new" | "waiting" | "overdue" | "closed";
+    messageCount: number;
+    lastMessageAt: string;
+  }>;
+};
+
 type ConversationListItem = {
   id: string;
   subject: string;
@@ -76,6 +97,8 @@ type ConversationRecord = {
     id: string;
     remindAt: Date;
     status: "ACTIVE" | "DISMISSED" | "SENT";
+    createdAt: Date;
+    updatedAt: Date;
   }>;
   tasks?: Array<{
     id: string;
@@ -128,6 +151,85 @@ function buildSuggestedDraft(conversation: ConversationRecord) {
   }
 
   return `${greeting} checking back in on "${conversation.subject}". If the timing still works on your side, I can keep things moving with a simple next step.`;
+}
+
+function roundHours(value: number | null) {
+  if (value === null) {
+    return null;
+  }
+
+  return Math.round(value * 10) / 10;
+}
+
+function getWeekWindow() {
+  const end = new Date();
+  const start = new Date(end);
+  start.setDate(start.getDate() - 7);
+
+  return { start, end };
+}
+
+function getPreviousWeekWindow(currentStart: Date) {
+  const end = new Date(currentStart);
+  const start = new Date(currentStart);
+  start.setDate(start.getDate() - 7);
+
+  return { start, end };
+}
+
+function isWithinWindow(value: Date | null | undefined, start: Date, end: Date) {
+  if (!value) {
+    return false;
+  }
+
+  return value >= start && value <= end;
+}
+
+function getResponseDurationsForWindow(
+  messages: ConversationRecord["messages"],
+  start: Date,
+  end: Date,
+) {
+  const durations: number[] = [];
+  let pendingInboundAt: Date | null = null;
+
+  for (const message of messages) {
+    if (message.direction === "INBOUND") {
+      pendingInboundAt = message.sentAt;
+      continue;
+    }
+
+    if (message.direction === "OUTBOUND" && pendingInboundAt && isWithinWindow(message.sentAt, start, end)) {
+      durations.push(hoursBetween(pendingInboundAt, message.sentAt));
+      pendingInboundAt = null;
+    }
+  }
+
+  return durations;
+}
+
+function average(numbers: number[]) {
+  if (numbers.length === 0) {
+    return null;
+  }
+
+  return numbers.reduce((sum, value) => sum + value, 0) / numbers.length;
+}
+
+function buildWeeklySummary(metrics: AnalyticsSummary["metrics"]) {
+  const replyTime =
+    metrics.averageReplyHours === null
+      ? "No reply-time data yet."
+      : `Average reply time is ${metrics.averageReplyHours} hours.`;
+
+  const trend =
+    metrics.responseTimeChange === "new"
+      ? "This is your first week with reply-time data."
+      : metrics.responseTimeChange === "steady"
+        ? "Reply speed is steady week over week."
+        : `Reply speed is ${metrics.responseTimeChange} by ${metrics.responseTimeDeltaHours} hours week over week.`;
+
+  return `This week you surfaced ${metrics.followUpsSuggested} follow-ups, marked ${metrics.followUpsSent} as sent, and completed ${metrics.remindersCompleted} reminders. ${replyTime} ${trend}`;
 }
 
 function detectFollowUpNeed(conversation: ConversationRecord): DetectionResult {
@@ -215,9 +317,6 @@ async function getUserConversations(userId: string) {
         },
       },
       reminders: {
-        where: {
-          status: "ACTIVE",
-        },
         orderBy: {
           remindAt: "asc",
         },
@@ -305,7 +404,7 @@ export async function refreshFollowUps(userId: string) {
       });
     }
 
-    const activeReminder = conversation.reminders[0];
+    const activeReminder = conversation.reminders.find((item) => item.status === "ACTIVE");
     const openTask = conversation.tasks?.find((task) => task.status === "OPEN");
 
     if (!activeReminder) {
@@ -351,7 +450,7 @@ export async function listFollowUps(userId: string) {
     .filter((conversation) => conversation.followUps.length > 0)
     .map((conversation) => {
       const latestFollowUp = conversation.followUps[0];
-      const activeReminder = conversation.reminders[0];
+      const activeReminder = conversation.reminders.find((item) => item.status === "ACTIVE");
 
       return {
         id: latestFollowUp.id,
@@ -432,6 +531,74 @@ export async function updateConversationNotes(
   });
 
   return listConversations(userId);
+}
+
+export async function getAnalyticsSummary(userId: string) {
+  const conversations = await getUserConversations(userId);
+  const { start: currentStart, end: currentEnd } = getWeekWindow();
+  const { start: previousStart, end: previousEnd } = getPreviousWeekWindow(currentStart);
+
+  const followUps = conversations.flatMap((conversation) => conversation.followUps);
+  const reminders = conversations.flatMap((conversation) => conversation.reminders);
+  const currentResponseDurations = conversations.flatMap((conversation) =>
+    getResponseDurationsForWindow(conversation.messages, currentStart, currentEnd),
+  );
+  const previousResponseDurations = conversations.flatMap((conversation) =>
+    getResponseDurationsForWindow(conversation.messages, previousStart, previousEnd),
+  );
+
+  const currentAverage = average(currentResponseDurations);
+  const previousAverage = average(previousResponseDurations);
+  const responseTimeDeltaHours =
+    currentAverage !== null && previousAverage !== null
+      ? roundHours(Math.abs(previousAverage - currentAverage))
+      : null;
+
+  const metrics = {
+    followUpsSuggested: followUps.filter((item) => isWithinWindow(item.suggestedAt, currentStart, currentEnd)).length,
+    followUpsSent: followUps.filter((item) => isWithinWindow(item.completedAt, currentStart, currentEnd)).length,
+    remindersCompleted: reminders.filter(
+      (item) =>
+        item.status !== "ACTIVE" && isWithinWindow(item.updatedAt, currentStart, currentEnd),
+    ).length,
+    averageReplyHours: roundHours(currentAverage),
+    responseTimeChange:
+      currentAverage === null
+        ? "new"
+        : previousAverage === null
+          ? "new"
+          : currentAverage < previousAverage
+            ? "faster"
+            : currentAverage > previousAverage
+              ? "slower"
+              : "steady",
+    responseTimeDeltaHours,
+  } satisfies AnalyticsSummary["metrics"];
+
+  const activeLeads = conversations
+    .filter((conversation) => conversation.status !== "CLOSED")
+    .sort((left, right) => {
+      return (
+        right.messages.length - left.messages.length ||
+        right.lastMessageAt.getTime() - left.lastMessageAt.getTime()
+      );
+    })
+    .slice(0, 5)
+    .map((conversation) => ({
+      conversationId: conversation.id,
+      subject: conversation.subject,
+      contactName: conversation.contactName,
+      contactEmail: conversation.contactEmail,
+      status: normalizeStatus(conversation.status),
+      messageCount: conversation.messages.length,
+      lastMessageAt: conversation.lastMessageAt.toISOString(),
+    }));
+
+  return {
+    metrics,
+    weeklySummary: buildWeeklySummary(metrics),
+    activeLeads,
+  } satisfies AnalyticsSummary;
 }
 
 export async function updateFollowUpStatus(

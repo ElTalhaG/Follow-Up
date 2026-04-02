@@ -126,6 +126,33 @@ body::before {
   gap: 14px;
 }
 
+.analytics-stack,
+.analytics-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.analytics-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.analytics-stat {
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.54);
+}
+
+.analytics-stat strong {
+  display: block;
+  font-size: 1.4rem;
+}
+
+.analytics-stat span {
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
 .conversation-card {
   padding: 18px;
   border-radius: 18px;
@@ -357,5 +384,9 @@ body::before {
   .toggle-row {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .analytics-grid {
+    grid-template-columns: 1fr;
   }
 }

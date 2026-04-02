@@ -125,6 +125,7 @@ db.exec(`
     "remindAt" DATETIME NOT NULL,
     "status" TEXT NOT NULL,
     "createdAt" DATETIME NOT NULL,
+    "updatedAt" DATETIME NOT NULL,
     FOREIGN KEY ("conversationId") REFERENCES "Conversation"("id") ON DELETE CASCADE
   );
 `);
@@ -174,8 +175,8 @@ const insertDraft = db.prepare(`
 `);
 
 const insertReminder = db.prepare(`
-  INSERT INTO "Reminder" ("id", "conversationId", "remindAt", "status", "createdAt")
-  VALUES (?, ?, ?, ?, ?)
+  INSERT INTO "Reminder" ("id", "conversationId", "remindAt", "status", "createdAt", "updatedAt")
+  VALUES (?, ?, ?, ?, ?, ?)
 `);
 
 insertUser.run(
@@ -353,6 +354,7 @@ insertReminder.run(
   "2026-03-27T10:00:00.000Z",
   "ACTIVE",
   now,
+  now,
 );
 
 insertReminder.run(
@@ -360,6 +362,7 @@ insertReminder.run(
   "conv_2",
   "2026-03-29T08:00:00.000Z",
   "ACTIVE",
+  now,
   now,
 );
 

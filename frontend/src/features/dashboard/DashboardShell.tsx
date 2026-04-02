@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import {
   api,
+  type AnalyticsSummary,
   type AuthResponse,
   type ConversationItem,
   type DraftRecord,
@@ -52,6 +53,7 @@ export function DashboardShell() {
     done: 0,
     canceled: 0,
   });
+  const [analytics, setAnalytics] = useState<AnalyticsSummary | null>(null);
   const [draftHistory, setDraftHistory] = useState<DraftsByFollowUp>({});
   const [draftEditors, setDraftEditors] = useState<DraftEditors>({});
   const [conversationNotes, setConversationNotes] = useState<ConversationNotes>({});
@@ -90,12 +92,13 @@ export function DashboardShell() {
   async function hydrateDashboard(token: string) {
     try {
       setIsBusy(true);
-      const [accountsResponse, followUpsResponse, conversationsResponse, remindersResponse] =
+      const [accountsResponse, followUpsResponse, conversationsResponse, remindersResponse, analyticsResponse] =
         await Promise.all([
         api.listGmailAccounts(token),
         api.listFollowUps(token),
         api.listConversations(token),
         api.listReminders(token),
+        api.getAnalytics(token),
       ]);
 
       setAccounts(accountsResponse.items);
@@ -106,6 +109,7 @@ export function DashboardShell() {
       );
       setReminders(remindersResponse.items);
       setTaskSummary(remindersResponse.tasks);
+      setAnalytics(analyticsResponse);
       setStatusMessage("Dashboard synced from the real backend.");
     } catch (error) {
       setStatusMessage(error instanceof Error ? error.message : "Failed to load dashboard.");
@@ -174,10 +178,11 @@ export function DashboardShell() {
 
     try {
       const syncResult = await api.syncGmail(session.token, accounts[0].id);
-      const [refreshed, conversationsResponse, remindersResponse] = await Promise.all([
+      const [refreshed, conversationsResponse, remindersResponse, analyticsResponse] = await Promise.all([
         api.refreshFollowUps(session.token),
         api.listConversations(session.token),
         api.listReminders(session.token),
+        api.getAnalytics(session.token),
       ]);
       setFollowUps(refreshed.items);
       setConversations(conversationsResponse.items);
@@ -187,6 +192,7 @@ export function DashboardShell() {
       }));
       setReminders(remindersResponse.items);
       setTaskSummary(remindersResponse.tasks);
+      setAnalytics(analyticsResponse);
       setStatusMessage(
         `Synced ${syncResult.syncedThreads} threads and ${syncResult.syncedMessages} messages from Gmail.`,
       );
@@ -205,10 +211,11 @@ export function DashboardShell() {
     setIsBusy(true);
 
     try {
-      const [response, conversationsResponse, remindersResponse] = await Promise.all([
+      const [response, conversationsResponse, remindersResponse, analyticsResponse] = await Promise.all([
         api.refreshFollowUps(session.token),
         api.listConversations(session.token),
         api.listReminders(session.token),
+        api.getAnalytics(session.token),
       ]);
       setFollowUps(response.items);
       setConversations(conversationsResponse.items);
@@ -218,6 +225,7 @@ export function DashboardShell() {
       }));
       setReminders(remindersResponse.items);
       setTaskSummary(remindersResponse.tasks);
+      setAnalytics(analyticsResponse);
       setStatusMessage(`Refreshed ${response.items.length} follow-ups.`);
     } catch (error) {
       setStatusMessage(error instanceof Error ? error.message : "Failed to refresh follow-ups.");
@@ -241,10 +249,11 @@ export function DashboardShell() {
         ...current,
         [followUpId]: history.items[0]?.content ?? "",
       }));
-      const [list, conversationsResponse, remindersResponse] = await Promise.all([
+      const [list, conversationsResponse, remindersResponse, analyticsResponse] = await Promise.all([
         api.listFollowUps(session.token),
         api.listConversations(session.token),
         api.listReminders(session.token),
+        api.getAnalytics(session.token),
       ]);
       setFollowUps(list.items);
       setConversations(conversationsResponse.items);
@@ -254,6 +263,7 @@ export function DashboardShell() {
       }));
       setReminders(remindersResponse.items);
       setTaskSummary(remindersResponse.tasks);
+      setAnalytics(analyticsResponse);
       setStatusMessage(`Generated a ${tone} draft.`);
     } catch (error) {
       setStatusMessage(error instanceof Error ? error.message : "Failed to generate draft.");
@@ -298,10 +308,11 @@ export function DashboardShell() {
       await api.updateDraft(session.token, currentDraft.id, content);
       const history = await api.listDrafts(session.token, followUpId);
       setDraftHistory((current) => ({ ...current, [followUpId]: history.items }));
-      const [list, conversationsResponse, remindersResponse] = await Promise.all([
+      const [list, conversationsResponse, remindersResponse, analyticsResponse] = await Promise.all([
         api.listFollowUps(session.token),
         api.listConversations(session.token),
         api.listReminders(session.token),
+        api.getAnalytics(session.token),
       ]);
       setFollowUps(list.items);
       setConversations(conversationsResponse.items);
@@ -311,6 +322,7 @@ export function DashboardShell() {
       }));
       setReminders(remindersResponse.items);
       setTaskSummary(remindersResponse.tasks);
+      setAnalytics(analyticsResponse);
       setStatusMessage("Draft edits saved.");
     } catch (error) {
       setStatusMessage(error instanceof Error ? error.message : "Failed to save draft.");
@@ -338,6 +350,7 @@ export function DashboardShell() {
         api.listConversations(session.token),
         api.listReminders(session.token),
       ]);
+      const analyticsResponse = await api.getAnalytics(session.token);
       setFollowUps(response.items);
       setConversations(conversationsResponse.items);
       setConversationNotes((current) => ({
@@ -346,6 +359,7 @@ export function DashboardShell() {
       }));
       setReminders(remindersResponse.items);
       setTaskSummary(remindersResponse.tasks);
+      setAnalytics(analyticsResponse);
       setStatusMessage(
         status === "DONE"
           ? "Marked follow-up as done."
@@ -373,8 +387,10 @@ export function DashboardShell() {
     try {
       await api.createReminder(session.token, conversationId, { preset });
       const remindersResponse = await api.listReminders(session.token);
+      const analyticsResponse = await api.getAnalytics(session.token);
       setReminders(remindersResponse.items);
       setTaskSummary(remindersResponse.tasks);
+      setAnalytics(analyticsResponse);
       setStatusMessage(
         preset === "later_today"
           ? "Reminder set for later today."
@@ -398,8 +414,10 @@ export function DashboardShell() {
 
     try {
       const response = await api.dismissReminder(session.token, reminderId);
+      const analyticsResponse = await api.getAnalytics(session.token);
       setReminders(response.items);
       setTaskSummary(response.tasks);
+      setAnalytics(analyticsResponse);
       setStatusMessage("Reminder dismissed.");
     } catch (error) {
       setStatusMessage(error instanceof Error ? error.message : "Failed to dismiss reminder.");
@@ -415,6 +433,7 @@ export function DashboardShell() {
     setFollowUps([]);
     setReminders([]);
     setTaskSummary({ open: 0, done: 0, canceled: 0 });
+    setAnalytics(null);
     setDraftHistory({});
     setDraftEditors({});
     setConversationNotes({});
@@ -704,6 +723,45 @@ export function DashboardShell() {
               ) : null}
             </div>
             <div className="status-card">
+              <strong>Weekly value</strong>
+              {!analytics ? (
+                <p>Connect Gmail and sync your inbox to see weekly impact metrics.</p>
+              ) : (
+                <div className="analytics-stack">
+                  <p>{analytics.weeklySummary}</p>
+                  <div className="analytics-grid">
+                    <div className="analytics-stat">
+                      <strong>{analytics.metrics.followUpsSuggested}</strong>
+                      <span>Follow-ups suggested</span>
+                    </div>
+                    <div className="analytics-stat">
+                      <strong>{analytics.metrics.followUpsSent}</strong>
+                      <span>Follow-ups sent</span>
+                    </div>
+                    <div className="analytics-stat">
+                      <strong>{analytics.metrics.remindersCompleted}</strong>
+                      <span>Reminders completed</span>
+                    </div>
+                    <div className="analytics-stat">
+                      <strong>
+                        {analytics.metrics.averageReplyHours === null
+                          ? "n/a"
+                          : `${analytics.metrics.averageReplyHours}h`}
+                      </strong>
+                      <span>
+                        Avg reply time
+                        {analytics.metrics.responseTimeChange === "steady"
+                          ? " steady"
+                          : analytics.metrics.responseTimeChange === "new"
+                            ? " this week"
+                            : ` ${analytics.metrics.responseTimeChange}`}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="status-card">
               <strong>Pipeline snapshot</strong>
               <ul className="feature-list">
                 <li>{openFollowUps.length} urgent follow-ups</li>
@@ -712,6 +770,29 @@ export function DashboardShell() {
                 <li>{completedFollowUps.length} completed items</li>
                 <li>{dueReminders.length} reminders due now</li>
               </ul>
+            </div>
+            <div className="status-card">
+              <strong>Most active leads</strong>
+              {!analytics?.activeLeads.length ? (
+                <p>No lead activity yet. Sync Gmail to populate this list.</p>
+              ) : (
+                <div className="history-list">
+                  {analytics.activeLeads.map((lead) => (
+                    <div className="history-item" key={lead.conversationId}>
+                      <div className="conversation-head compact-head">
+                        <div>
+                          <h3>{lead.subject}</h3>
+                          <p>{lead.contactName ?? lead.contactEmail}</p>
+                        </div>
+                        <span className={`priority priority-${lead.status === "overdue" ? "high" : "low"}`}>
+                          {lead.messageCount} msgs
+                        </span>
+                      </div>
+                      <p className="helper-copy">Last activity {formatDate(lead.lastMessageAt)}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
             <div className="status-card">
               <strong>Active conversations</strong>

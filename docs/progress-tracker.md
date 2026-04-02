@@ -148,13 +148,13 @@
 
 ## Phase 12: Add Basic Analytics
 
-- `not started` Track simple product metrics:
-- `not started` follow-ups suggested
-- `not started` follow-ups sent
-- `not started` reminders completed
-- `not started` response time changes
-- `not started` Show a small weekly summary
-- `not started` Show which leads are most active
+- `done` Track simple product metrics:
+- `done` follow-ups suggested
+- `done` follow-ups sent
+- `done` reminders completed
+- `done` response time changes
+- `done` Show a small weekly summary
+- `done` Show which leads are most active
 - `done` Keep the analytics basic in v1
 - `done` Use the data to prove the product is valuable
 
@@ -218,10 +218,11 @@
 - `done` Phase 9
 - `done` Phase 10
 - `done` Phase 11
-- `not started` Phase 12 onward
+- `done` Phase 12
+- `not started` Phase 13 onward
 
 ## Next Best Move
 
-1. Start Phase 12 analytics with lightweight weekly summaries and value metrics.
+1. Start Phase 13 hardening for Gmail errors, duplicate sync inputs, and draft fallback behavior.
 2. Add authenticated frontend polish for connect, sync, refresh, draft generation, and draft editing.
 3. Add support for multiple connected accounts when we expand testing.
