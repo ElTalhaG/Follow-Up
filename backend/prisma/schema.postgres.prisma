@@ -1,0 +1,145 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ConversationStatus {
+  NEW
+  WAITING
+  OVERDUE
+  CLOSED
+}
+
+enum MessageDirection {
+  INBOUND
+  OUTBOUND
+}
+
+enum FollowUpStatus {
+  OPEN
+  DONE
+  IGNORED
+  SNOOZED
+}
+
+enum TaskStatus {
+  OPEN
+  DONE
+  CANCELED
+}
+
+enum ReminderStatus {
+  ACTIVE
+  DISMISSED
+  SENT
+}
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  passwordHash String
+  fullName     String
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  accounts     Account[]
+}
+
+model Account {
+  id                String         @id @default(cuid())
+  userId            String
+  provider          String
+  providerAccountId String
+  emailAddress      String?
+  accessScope       String
+  accessToken       String?
+  refreshToken      String?
+  tokenExpiresAt    DateTime?
+  connectedAt       DateTime       @default(now())
+  lastSyncedAt      DateTime?
+  user              User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  conversations     Conversation[]
+
+  @@unique([provider, providerAccountId])
+}
+
+model Conversation {
+  id               String             @id @default(cuid())
+  accountId        String
+  externalThreadId String
+  subject          String
+  contactName      String?
+  contactEmail     String
+  notes            String?
+  status           ConversationStatus
+  lastMessageAt    DateTime
+  lastInboundAt    DateTime?
+  lastOutboundAt   DateTime?
+  needsFollowUp    Boolean            @default(false)
+  followUpReason   String?
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  account          Account            @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  messages         Message[]
+  followUps        FollowUp[]
+  tasks            Task[]
+  reminders        Reminder[]
+
+  @@unique([accountId, externalThreadId])
+}
+
+model Message {
+  id                String           @id @default(cuid())
+  conversationId    String
+  externalMessageId String           @unique
+  direction         MessageDirection
+  senderEmail       String
+  bodyExcerpt       String
+  sentAt            DateTime
+  createdAt         DateTime         @default(now())
+  conversation      Conversation     @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+}
+
+model FollowUp {
+  id             String         @id @default(cuid())
+  conversationId String
+  status         FollowUpStatus
+  reason         String
+  priority       String
+  suggestedAt    DateTime       @default(now())
+  completedAt    DateTime?
+  conversation   Conversation   @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  drafts         Draft[]
+}
+
+model Task {
+  id             String       @id @default(cuid())
+  conversationId String
+  title          String
+  status         TaskStatus
+  dueAt          DateTime?
+  createdAt      DateTime     @default(now())
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+}
+
+model Reminder {
+  id             String         @id @default(cuid())
+  conversationId String
+  remindAt       DateTime
+  status         ReminderStatus
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  conversation   Conversation   @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+}
+
+model Draft {
+  id         String   @id @default(cuid())
+  followUpId String
+  tone       String
+  content    String
+  createdAt  DateTime @default(now())
+  followUp   FollowUp @relation(fields: [followUpId], references: [id], onDelete: Cascade)
+}

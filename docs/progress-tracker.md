@@ -227,6 +227,6 @@
 
 ## Next Best Move
 
-1. Move into production readiness: PostgreSQL, deployment config, and hosted staging.
-2. Finish real Gmail OAuth validation against a live Google app and hosted callback URL.
+1. Stand up hosted staging with Postgres using the new production schema and deployment config.
+2. Validate real Gmail OAuth against a live Google app and hosted callback URL.
 3. Add Stripe and private beta onboarding once staging is stable.

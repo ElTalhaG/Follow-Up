@@ -1,11 +1,16 @@
 import cors from "cors";
 import express from "express";
 import { buildRouter, getErrorStatusCode } from "./api/router.js";
+import { buildCorsOptions, getPort, isProduction } from "./config/env.js";
 
 const app = express();
-const port = Number(process.env.PORT ?? 4000);
+const port = getPort();
 
-app.use(cors());
+if (isProduction()) {
+  app.set("trust proxy", 1);
+}
+
+app.use(cors(buildCorsOptions()));
 app.use(express.json());
 app.use("/api", buildRouter());
 

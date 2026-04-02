@@ -91,6 +91,8 @@ Required env vars:
 AUTH_SECRET=...
 GMAIL_CLIENT_ID=...
 GMAIL_CLIENT_SECRET=...
+PORT=4000
+CORS_ORIGIN=http://localhost:5173
 VITE_API_BASE_URL=http://localhost:4000/api
 VITE_GMAIL_REDIRECT_URI=http://localhost:5173/oauth/google/callback
 ```
@@ -99,6 +101,28 @@ Frontend example env:
 
 ```bash
 cp frontend/.env.example frontend/.env
+```
+
+Backend example env:
+
+```bash
+cp backend/.env.example backend/.env
+```
+
+## Production Readiness
+
+The repo now includes starter deployment-oriented config:
+
+- [backend/prisma/schema.postgres.prisma](/Users/talha/Developer/Followup/backend/prisma/schema.postgres.prisma) for production Postgres builds
+- [backend/Dockerfile](/Users/talha/Developer/Followup/backend/Dockerfile) for containerized backend deploys
+- [frontend/vercel.json](/Users/talha/Developer/Followup/frontend/vercel.json) so SPA routes like `/oauth/google/callback` resolve correctly on Vercel
+
+Useful production commands:
+
+```bash
+npm --workspace backend run db:generate:prod
+npm --workspace backend run db:push:prod
+npm --workspace backend run build:prod
 ```
 
 Current backend Gmail endpoints:
