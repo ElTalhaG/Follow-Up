@@ -160,12 +160,12 @@
 
 ## Phase 13: Handle Errors And Edge Cases
 
-- `not started` Handle failed inbox connections gracefully
-- `not started` Handle missing permissions
-- `not started` Handle duplicate conversations
-- `not started` Prevent empty or broken drafts
-- `not started` Handle AI failures by falling back to a manual draft
-- `not started` Validate all external data before storing it
+- `done` Handle failed inbox connections gracefully
+- `done` Handle missing permissions
+- `done` Handle duplicate conversations
+- `done` Prevent empty or broken drafts
+- `done` Handle AI failures by falling back to a manual draft
+- `done` Validate all external data before storing it
 
 ## Phase 14: Test Everything
 
@@ -219,10 +219,11 @@
 - `done` Phase 10
 - `done` Phase 11
 - `done` Phase 12
-- `not started` Phase 13 onward
+- `done` Phase 13
+- `not started` Phase 14 onward
 
 ## Next Best Move
 
-1. Start Phase 13 hardening for Gmail errors, duplicate sync inputs, and draft fallback behavior.
+1. Expand Phase 14 with multi-account and edge-case test coverage.
 2. Add authenticated frontend polish for connect, sync, refresh, draft generation, and draft editing.
 3. Add support for multiple connected accounts when we expand testing.

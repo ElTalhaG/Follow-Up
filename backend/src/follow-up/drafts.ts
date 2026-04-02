@@ -92,6 +92,12 @@ function buildDraftContent(
   return `${greeting}\n\n${intro} ${context}\n\n${closing}`;
 }
 
+function buildFallbackDraft(contactName: string | null, subject: string) {
+  const greeting = getGreeting(contactName);
+
+  return `${greeting}\n\nFollowing up on "${subject}". If now is still a good time, I can send the next step or answer any questions.\n\nThanks,`;
+}
+
 async function getFollowUpForUser(userId: string, followUpId: string) {
   const followUpDelegate = prisma.followUp as any;
 
@@ -131,12 +137,28 @@ export async function generateDraft(userId: string, followUpId: string, tone: st
   }
 
   const followUp = await getFollowUpForUser(userId, followUpId);
-  const content = buildDraftContent(
-    tone,
-    followUp.conversation.contactName,
-    followUp.conversation.subject,
-    followUp.reason,
-  );
+  let content: string;
+
+  try {
+    content = buildDraftContent(
+      tone,
+      followUp.conversation.contactName,
+      followUp.conversation.subject,
+      followUp.reason,
+    );
+  } catch {
+    content = buildFallbackDraft(
+      followUp.conversation.contactName,
+      followUp.conversation.subject,
+    );
+  }
+
+  if (!content.trim()) {
+    content = buildFallbackDraft(
+      followUp.conversation.contactName,
+      followUp.conversation.subject,
+    );
+  }
 
   const draftDelegate = (prisma as any).draft;
   const draft = await draftDelegate.create({

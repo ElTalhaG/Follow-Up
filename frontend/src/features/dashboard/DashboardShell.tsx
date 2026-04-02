@@ -162,7 +162,11 @@ export function DashboardShell() {
       await hydrateDashboard(session.token);
       setStatusMessage("Gmail connected in read-only mode.");
     } catch (error) {
-      setStatusMessage(error instanceof Error ? error.message : "Failed to connect Gmail.");
+      setStatusMessage(
+        error instanceof Error
+          ? error.message
+          : "Failed to connect Gmail. Please retry the inbox connection.",
+      );
     } finally {
       setIsBusy(false);
     }
@@ -197,7 +201,11 @@ export function DashboardShell() {
         `Synced ${syncResult.syncedThreads} threads and ${syncResult.syncedMessages} messages from Gmail.`,
       );
     } catch (error) {
-      setStatusMessage(error instanceof Error ? error.message : "Sync failed.");
+      setStatusMessage(
+        error instanceof Error
+          ? error.message
+          : "Sync failed. Please reconnect Gmail or try again shortly.",
+      );
     } finally {
       setIsBusy(false);
     }
@@ -266,7 +274,11 @@ export function DashboardShell() {
       setAnalytics(analyticsResponse);
       setStatusMessage(`Generated a ${tone} draft.`);
     } catch (error) {
-      setStatusMessage(error instanceof Error ? error.message : "Failed to generate draft.");
+      setStatusMessage(
+        error instanceof Error
+          ? error.message
+          : "Draft generation failed. You can still write a manual follow-up below.",
+      );
     } finally {
       setIsBusy(false);
     }

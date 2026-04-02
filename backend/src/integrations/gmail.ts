@@ -48,6 +48,11 @@ type SyncResult = {
   syncedMessages: number;
 };
 
+type NormalizedThread = {
+  id: string;
+  messages: GmailMessage[];
+};
+
 type GmailAccountRecord = {
   id: string;
   userId: string;
@@ -147,6 +152,14 @@ function verifyState(state: string, redirectUri: string) {
   return payload;
 }
 
+function ensureStateMatchesUser(state: string, userId: string, redirectUri: string) {
+  const payload = verifyState(state, redirectUri);
+
+  if (payload.userId !== userId) {
+    throw new AuthError("OAuth state does not match the signed-in user.", 403);
+  }
+}
+
 function getHeaderValue(message: GmailMessage, headerName: string) {
   return (
     message.payload?.headers?.find(
@@ -193,24 +206,89 @@ function getConversationStatus(lastInboundAt: Date | null, lastOutboundAt: Date 
   return "NEW" as const;
 }
 
+function normalizeMessageText(value: string | undefined, fallback: string) {
+  const text = value?.replace(/\s+/g, " ").trim() ?? "";
+  return text ? text.slice(0, 800) : fallback;
+}
+
+function normalizeSubject(value: string | null) {
+  return normalizeMessageText(value ?? undefined, "No subject");
+}
+
+function normalizeEmail(value: string | null, fallback: string) {
+  const email = value?.trim().toLowerCase() ?? "";
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? email : fallback;
+}
+
+function parseMessageDate(value: string | undefined) {
+  const timestamp = Number(value ?? NaN);
+
+  if (!Number.isFinite(timestamp) || timestamp <= 0) {
+    return null;
+  }
+
+  const date = new Date(timestamp);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function normalizeThread(thread: GmailThread) {
+  const seenIds = new Set<string>();
+  const messages = (thread.messages ?? [])
+    .filter((message) => {
+      if (!message.id || seenIds.has(message.id)) {
+        return false;
+      }
+
+      seenIds.add(message.id);
+      return true;
+    })
+    .sort((left, right) => {
+      const leftDate = Number(left.internalDate ?? 0);
+      const rightDate = Number(right.internalDate ?? 0);
+      return leftDate - rightDate;
+    })
+    .filter((message) => parseMessageDate(message.internalDate));
+
+  if (!thread.id || messages.length === 0) {
+    return null;
+  }
+
+  return {
+    id: thread.id,
+    messages,
+  } satisfies NormalizedThread;
+}
+
 async function exchangeCodeForTokens(code: string, redirectUri: string) {
   const { clientId, clientSecret } = getGmailConfig();
+  let response: Response;
 
-  const response = await fetch("https://oauth2.googleapis.com/token", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
-    body: new URLSearchParams({
-      code,
-      client_id: clientId,
-      client_secret: clientSecret,
-      redirect_uri: redirectUri,
-      grant_type: "authorization_code",
-    }),
-  });
+  try {
+    response = await fetch("https://oauth2.googleapis.com/token", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: new URLSearchParams({
+        code,
+        client_id: clientId,
+        client_secret: clientSecret,
+        redirect_uri: redirectUri,
+        grant_type: "authorization_code",
+      }),
+    });
+  } catch {
+    throw new AuthError("Unable to reach Gmail right now. Please try connecting again.", 502);
+  }
 
   if (!response.ok) {
+    if (response.status === 401 || response.status === 403) {
+      throw new AuthError(
+        "Gmail rejected the connection request. Please reconnect and approve read-only inbox access.",
+        403,
+      );
+    }
+
     throw new AuthError("Failed to exchange Gmail authorization code.", 502);
   }
 
@@ -219,21 +297,33 @@ async function exchangeCodeForTokens(code: string, redirectUri: string) {
 
 async function refreshAccessToken(refreshToken: string) {
   const { clientId, clientSecret } = getGmailConfig();
+  let response: Response;
 
-  const response = await fetch("https://oauth2.googleapis.com/token", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
-    body: new URLSearchParams({
-      client_id: clientId,
-      client_secret: clientSecret,
-      refresh_token: refreshToken,
-      grant_type: "refresh_token",
-    }),
-  });
+  try {
+    response = await fetch("https://oauth2.googleapis.com/token", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: new URLSearchParams({
+        client_id: clientId,
+        client_secret: clientSecret,
+        refresh_token: refreshToken,
+        grant_type: "refresh_token",
+      }),
+    });
+  } catch {
+    throw new AuthError("Unable to refresh Gmail access right now. Please try again shortly.", 502);
+  }
 
   if (!response.ok) {
+    if (response.status === 401 || response.status === 403) {
+      throw new AuthError(
+        "Gmail access has expired or permissions were removed. Please reconnect your inbox.",
+        403,
+      );
+    }
+
     throw new AuthError("Failed to refresh Gmail access token.", 502);
   }
 
@@ -241,13 +331,26 @@ async function refreshAccessToken(refreshToken: string) {
 }
 
 async function gmailRequest<T>(path: string, accessToken: string) {
-  const response = await fetch(`https://gmail.googleapis.com/gmail/v1${path}`, {
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
-  });
+  let response: Response;
+
+  try {
+    response = await fetch(`https://gmail.googleapis.com/gmail/v1${path}`, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+  } catch {
+    throw new AuthError("Unable to reach Gmail right now. Please try syncing again.", 502);
+  }
 
   if (!response.ok) {
+    if (response.status === 401 || response.status === 403) {
+      throw new AuthError(
+        "Gmail permissions are missing or expired. Please reconnect your inbox.",
+        403,
+      );
+    }
+
     throw new AuthError(`Gmail request failed for ${path}.`, 502);
   }
 
@@ -332,16 +435,17 @@ function buildMockThreads() {
 }
 
 export function getGmailConnectUrl(userId: string, redirectUri: string) {
+  const state = createState(userId, redirectUri);
+
   if (isMockModeEnabled()) {
     return {
-      url: `mock-gmail://oauth?state=${createState(userId, redirectUri)}`,
-      state: createState(userId, redirectUri),
+      url: `mock-gmail://oauth?state=${state}`,
+      state,
       mode: "mock" as const,
     };
   }
 
   const { clientId } = getGmailConfig();
-  const state = createState(userId, redirectUri);
   const url = new URL("https://accounts.google.com/o/oauth2/v2/auth");
 
   url.searchParams.set("client_id", clientId);
@@ -365,7 +469,7 @@ export async function connectGmailAccount(
   state: string,
   redirectUri: string,
 ) {
-  verifyState(state, redirectUri);
+  ensureStateMatchesUser(state, userId, redirectUri);
   const accountDelegate = prisma.account as any;
 
   if (isMockModeEnabled()) {
@@ -405,20 +509,30 @@ export async function connectGmailAccount(
   }
 
   const tokenResponse = await exchangeCodeForTokens(code, redirectUri);
+  if (!tokenResponse.access_token) {
+    throw new AuthError("Gmail did not return an access token.", 502);
+  }
+
   const profile = await fetchProfile(tokenResponse.access_token);
+  const profileEmail = normalizeEmail(profile.emailAddress, "");
+
+  if (!profileEmail) {
+    throw new AuthError("Gmail did not return a usable inbox address.", 502);
+  }
+
   const account = (await accountDelegate.upsert({
     where: {
       provider_providerAccountId: {
         provider: "gmail",
-        providerAccountId: profile.emailAddress.toLowerCase(),
+        providerAccountId: profileEmail,
       },
     },
     update: {
       userId,
-      emailAddress: profile.emailAddress.toLowerCase(),
+      emailAddress: profileEmail,
       accessScope: tokenResponse.scope ?? GMAIL_SCOPE,
       accessToken: tokenResponse.access_token,
-      refreshToken: tokenResponse.refresh_token,
+      refreshToken: tokenResponse.refresh_token ?? undefined,
       tokenExpiresAt: tokenResponse.expires_in
         ? new Date(Date.now() + tokenResponse.expires_in * 1000)
         : null,
@@ -427,11 +541,11 @@ export async function connectGmailAccount(
     create: {
       userId,
       provider: "gmail",
-      providerAccountId: profile.emailAddress.toLowerCase(),
-      emailAddress: profile.emailAddress.toLowerCase(),
+      providerAccountId: profileEmail,
+      emailAddress: profileEmail,
       accessScope: tokenResponse.scope ?? GMAIL_SCOPE,
       accessToken: tokenResponse.access_token,
-      refreshToken: tokenResponse.refresh_token,
+      refreshToken: tokenResponse.refresh_token ?? undefined,
       tokenExpiresAt: tokenResponse.expires_in
         ? new Date(Date.now() + tokenResponse.expires_in * 1000)
         : null,
@@ -511,6 +625,10 @@ export async function listGmailAccounts(userId: string) {
 }
 
 export async function syncGmailAccount(userId: string, accountId: string, maxResults = 10) {
+  if (!Number.isInteger(maxResults) || maxResults < 1 || maxResults > 25) {
+    throw new AuthError("maxResults must be between 1 and 25.", 400);
+  }
+
   const { account, accessToken } = await ensureValidAccessToken(accountId);
 
   if (account.userId !== userId) {
@@ -525,15 +643,13 @@ export async function syncGmailAccount(userId: string, accountId: string, maxRes
   let syncedMessages = 0;
 
   for (const thread of threads) {
-    const messages = [...(thread.messages ?? [])].sort((left, right) => {
-      const leftDate = Number(left.internalDate ?? 0);
-      const rightDate = Number(right.internalDate ?? 0);
-      return leftDate - rightDate;
-    });
+    const normalizedThread = normalizeThread(thread);
 
-    if (messages.length === 0) {
+    if (!normalizedThread) {
       continue;
     }
+
+    const messages = normalizedThread.messages;
 
     const firstMessage = messages[0];
     const lastMessage = messages[messages.length - 1];
@@ -543,22 +659,29 @@ export async function syncGmailAccount(userId: string, accountId: string, maxRes
     const outboundMessages = messages.filter(
       (message) => getDirection(message, emailAddress) === "OUTBOUND",
     );
-    const contactEmail =
-      parseEmailAddress(getHeaderValue(firstMessage, "From")) ?? "unknown@example.com";
+    const contactEmail = normalizeEmail(
+      parseEmailAddress(getHeaderValue(firstMessage, "From")),
+      "unknown@example.com",
+    );
     const contactName = parseContactName(getHeaderValue(firstMessage, "From"));
-    const subject = getHeaderValue(firstMessage, "Subject") ?? "No subject";
+    const subject = normalizeSubject(getHeaderValue(firstMessage, "Subject"));
     const lastInboundAt = inboundMessages.length
-      ? new Date(Number(inboundMessages[inboundMessages.length - 1].internalDate))
+      ? parseMessageDate(inboundMessages[inboundMessages.length - 1].internalDate)
       : null;
     const lastOutboundAt = outboundMessages.length
-      ? new Date(Number(outboundMessages[outboundMessages.length - 1].internalDate))
+      ? parseMessageDate(outboundMessages[outboundMessages.length - 1].internalDate)
       : null;
+    const lastMessageAt = parseMessageDate(lastMessage.internalDate);
+
+    if (!lastMessageAt) {
+      continue;
+    }
 
     const conversation = await prisma.conversation.upsert({
       where: {
         accountId_externalThreadId: {
           accountId: account.id,
-          externalThreadId: thread.id,
+          externalThreadId: normalizedThread.id,
         },
       },
       update: {
@@ -566,19 +689,19 @@ export async function syncGmailAccount(userId: string, accountId: string, maxRes
         contactName,
         contactEmail,
         status: getConversationStatus(lastInboundAt, lastOutboundAt),
-        lastMessageAt: new Date(Number(lastMessage.internalDate)),
+        lastMessageAt,
         lastInboundAt,
         lastOutboundAt,
         updatedAt: new Date(),
       },
       create: {
         accountId: account.id,
-        externalThreadId: thread.id,
+        externalThreadId: normalizedThread.id,
         subject,
         contactName,
         contactEmail,
         status: getConversationStatus(lastInboundAt, lastOutboundAt),
-        lastMessageAt: new Date(Number(lastMessage.internalDate)),
+        lastMessageAt,
         lastInboundAt,
         lastOutboundAt,
       },
@@ -592,19 +715,23 @@ export async function syncGmailAccount(userId: string, accountId: string, maxRes
         update: {
           conversationId: conversation.id,
           direction: getDirection(message, emailAddress),
-          senderEmail:
-            parseEmailAddress(getHeaderValue(message, "From")) ?? "unknown@example.com",
-          bodyExcerpt: message.snippet ?? "",
-          sentAt: new Date(Number(message.internalDate)),
+          senderEmail: normalizeEmail(
+            parseEmailAddress(getHeaderValue(message, "From")),
+            "unknown@example.com",
+          ),
+          bodyExcerpt: normalizeMessageText(message.snippet, "(No preview available)"),
+          sentAt: parseMessageDate(message.internalDate) ?? lastMessageAt,
         },
         create: {
           conversationId: conversation.id,
           externalMessageId: message.id,
           direction: getDirection(message, emailAddress),
-          senderEmail:
-            parseEmailAddress(getHeaderValue(message, "From")) ?? "unknown@example.com",
-          bodyExcerpt: message.snippet ?? "",
-          sentAt: new Date(Number(message.internalDate)),
+          senderEmail: normalizeEmail(
+            parseEmailAddress(getHeaderValue(message, "From")),
+            "unknown@example.com",
+          ),
+          bodyExcerpt: normalizeMessageText(message.snippet, "(No preview available)"),
+          sentAt: parseMessageDate(message.internalDate) ?? lastMessageAt,
         },
       });
 
