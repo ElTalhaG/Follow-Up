@@ -74,6 +74,13 @@ body::before {
   color: var(--muted);
 }
 
+.hero-actions {
+  display: grid;
+  gap: 12px;
+  margin-top: 20px;
+  max-width: 620px;
+}
+
 .panel-grid {
   display: grid;
   gap: 20px;
@@ -116,6 +123,20 @@ body::before {
   color: var(--muted);
 }
 
+.mini-pill {
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.56);
+  font-size: 0.8rem;
+}
+
+.mini-pill.is-done {
+  background: rgba(203, 95, 47, 0.14);
+  color: var(--accent);
+}
+
 .stack {
   display: grid;
   gap: 16px;
@@ -124,6 +145,29 @@ body::before {
 .workspace-stack {
   display: grid;
   gap: 14px;
+}
+
+.loading-banner {
+  position: sticky;
+  top: 16px;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  margin-bottom: 18px;
+  border-radius: 999px;
+  background: rgba(47, 33, 23, 0.92);
+  color: #fffaf2;
+  box-shadow: var(--shadow);
+}
+
+.loading-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: #f7d8bf;
+  animation: pulse 1s ease-in-out infinite;
 }
 
 .analytics-stack,
@@ -227,6 +271,46 @@ body::before {
 .status-card {
   display: grid;
   gap: 14px;
+}
+
+.status-strip,
+.checklist {
+  display: grid;
+  gap: 10px;
+}
+
+.status-strip {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.checklist-item {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 12px;
+  align-items: start;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.54);
+}
+
+.checklist-item.done {
+  background: rgba(203, 95, 47, 0.08);
+}
+
+.checkmark {
+  min-width: 44px;
+  padding: 6px 8px;
+  border-radius: 999px;
+  background: rgba(112, 88, 72, 0.12);
+  color: var(--muted);
+  text-align: center;
+  font-size: 0.78rem;
+}
+
+.checklist-item.done .checkmark {
+  background: rgba(203, 95, 47, 0.16);
+  color: var(--accent);
 }
 
 .field {
@@ -388,5 +472,22 @@ body::before {
 
   .analytics-grid {
     grid-template-columns: 1fr;
+  }
+
+  .status-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    transform: scale(0.9);
+    opacity: 0.7;
+  }
+
+  50% {
+    transform: scale(1.15);
+    opacity: 1;
   }
 }

@@ -26,6 +26,21 @@ type WorkspaceData = {
   analytics: AnalyticsSummary;
 };
 
+type ActivityState =
+  | "idle"
+  | "auth"
+  | "hydrate"
+  | "connect"
+  | "sync"
+  | "refresh"
+  | "draft"
+  | "save-draft"
+  | "follow-up"
+  | "reminder"
+  | "dismiss-reminder"
+  | "notes"
+  | "demo";
+
 function formatPriority(priority: FollowUpItem["priority"]) {
   return priority.charAt(0).toUpperCase() + priority.slice(1);
 }
@@ -41,6 +56,37 @@ function formatDate(value: string | null) {
     hour: "numeric",
     minute: "2-digit",
   }).format(new Date(value));
+}
+
+function getActivityLabel(activity: ActivityState) {
+  switch (activity) {
+    case "auth":
+      return "Checking your account";
+    case "hydrate":
+      return "Refreshing your workspace";
+    case "connect":
+      return "Connecting Gmail";
+    case "sync":
+      return "Syncing recent inbox threads";
+    case "refresh":
+      return "Looking for stalled leads";
+    case "draft":
+      return "Drafting a follow-up";
+    case "save-draft":
+      return "Saving your draft";
+    case "follow-up":
+      return "Updating follow-up status";
+    case "reminder":
+      return "Scheduling a reminder";
+    case "dismiss-reminder":
+      return "Clearing the reminder";
+    case "notes":
+      return "Saving conversation notes";
+    case "demo":
+      return "Running the demo flow";
+    default:
+      return "Working";
+  }
 }
 
 export function DashboardShell() {
@@ -66,12 +112,38 @@ export function DashboardShell() {
   const [conversationNotes, setConversationNotes] = useState<ConversationNotes>({});
   const [statusMessage, setStatusMessage] = useState("Sign in to unlock Gmail sync and follow-up actions.");
   const [isBusy, setIsBusy] = useState(false);
+  const [activity, setActivity] = useState<ActivityState>("idle");
 
   const openFollowUps = followUps.filter((item) => item.actionStatus === "open");
   const snoozedFollowUps = followUps.filter((item) => item.actionStatus === "snoozed");
   const completedFollowUps = followUps.filter((item) => item.actionStatus === "done");
   const activeConversations = conversations.filter((item) => item.status !== "closed").slice(0, 4);
   const dueReminders = reminders.filter((item) => item.isDue);
+  const hasConnectedInbox = accounts.length > 0;
+  const hasSyncedData = conversations.length > 0;
+  const hasDetectedWork = followUps.length > 0;
+  const onboardingSteps = [
+    {
+      label: "Create your account",
+      done: Boolean(session),
+      helper: session ? "You are signed in." : "Register or sign in to unlock the workspace.",
+    },
+    {
+      label: "Connect Gmail",
+      done: hasConnectedInbox,
+      helper: hasConnectedInbox ? "Your inbox is connected in read-only mode." : "Link Gmail to pull lead conversations.",
+    },
+    {
+      label: "Sync your inbox",
+      done: hasSyncedData,
+      helper: hasSyncedData ? "Recent threads are in the workspace." : "Run one sync to import recent threads.",
+    },
+    {
+      label: "Review flagged follow-ups",
+      done: hasDetectedWork,
+      helper: hasDetectedWork ? "You already have leads to review." : "Refresh follow-ups to surface missed replies.",
+    },
+  ];
 
   useEffect(() => {
     const stored = window.localStorage.getItem("followup-session");
@@ -145,6 +217,7 @@ export function DashboardShell() {
   async function hydrateDashboard(token: string) {
     try {
       setIsBusy(true);
+      setActivity("hydrate");
       const [accountsResponse, workspace] = await Promise.all([
         api.listGmailAccounts(token),
         loadWorkspaceData(token),
@@ -157,12 +230,14 @@ export function DashboardShell() {
       setStatusMessage(error instanceof Error ? error.message : "Failed to load dashboard.");
     } finally {
       setIsBusy(false);
+      setActivity("idle");
     }
   }
 
   async function handleAuthSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setIsBusy(true);
+    setActivity("auth");
 
     try {
       const response =
@@ -184,6 +259,7 @@ export function DashboardShell() {
       setStatusMessage(error instanceof Error ? error.message : "Authentication failed.");
     } finally {
       setIsBusy(false);
+      setActivity("idle");
     }
   }
 
@@ -193,6 +269,7 @@ export function DashboardShell() {
     }
 
     setIsBusy(true);
+    setActivity("connect");
 
     try {
       const connect = await api.getGmailConnectUrl(session.token, REDIRECT_URI);
@@ -211,6 +288,7 @@ export function DashboardShell() {
       );
     } finally {
       setIsBusy(false);
+      setActivity("idle");
     }
   }
 
@@ -221,6 +299,7 @@ export function DashboardShell() {
     }
 
     setIsBusy(true);
+    setActivity("sync");
 
     try {
       const syncResult = await api.syncGmail(session.token, accounts[0].id);
@@ -243,6 +322,7 @@ export function DashboardShell() {
       );
     } finally {
       setIsBusy(false);
+      setActivity("idle");
     }
   }
 
@@ -252,6 +332,7 @@ export function DashboardShell() {
     }
 
     setIsBusy(true);
+    setActivity("refresh");
 
     try {
       const [response, workspace] = await Promise.all([
@@ -267,6 +348,7 @@ export function DashboardShell() {
       setStatusMessage(error instanceof Error ? error.message : "Failed to refresh follow-ups.");
     } finally {
       setIsBusy(false);
+      setActivity("idle");
     }
   }
 
@@ -276,6 +358,7 @@ export function DashboardShell() {
     }
 
     setIsBusy(true);
+    setActivity("draft");
 
     try {
       await api.generateDraft(session.token, followUpId, tone);
@@ -295,6 +378,7 @@ export function DashboardShell() {
       );
     } finally {
       setIsBusy(false);
+      setActivity("idle");
     }
   }
 
@@ -329,6 +413,7 @@ export function DashboardShell() {
     }
 
     setIsBusy(true);
+    setActivity("save-draft");
 
     try {
       await api.updateDraft(session.token, currentDraft.id, content);
@@ -340,6 +425,7 @@ export function DashboardShell() {
       setStatusMessage(error instanceof Error ? error.message : "Failed to save draft.");
     } finally {
       setIsBusy(false);
+      setActivity("idle");
     }
   }
 
@@ -352,6 +438,7 @@ export function DashboardShell() {
     }
 
     setIsBusy(true);
+    setActivity("follow-up");
 
     try {
       const response = await api.updateFollowUpStatus(session.token, followUpId, {
@@ -374,6 +461,7 @@ export function DashboardShell() {
       setStatusMessage(error instanceof Error ? error.message : "Failed to update follow-up.");
     } finally {
       setIsBusy(false);
+      setActivity("idle");
     }
   }
 
@@ -386,6 +474,7 @@ export function DashboardShell() {
     }
 
     setIsBusy(true);
+    setActivity("reminder");
 
     try {
       await api.createReminder(session.token, conversationId, { preset });
@@ -402,6 +491,7 @@ export function DashboardShell() {
       setStatusMessage(error instanceof Error ? error.message : "Failed to set reminder.");
     } finally {
       setIsBusy(false);
+      setActivity("idle");
     }
   }
 
@@ -411,6 +501,7 @@ export function DashboardShell() {
     }
 
     setIsBusy(true);
+    setActivity("dismiss-reminder");
 
     try {
       const response = await api.dismissReminder(session.token, reminderId);
@@ -425,6 +516,7 @@ export function DashboardShell() {
       setStatusMessage(error instanceof Error ? error.message : "Failed to dismiss reminder.");
     } finally {
       setIsBusy(false);
+      setActivity("idle");
     }
   }
 
@@ -441,6 +533,7 @@ export function DashboardShell() {
     }
 
     setIsBusy(true);
+    setActivity("notes");
 
     try {
       const response = await api.updateConversationNotes(
@@ -458,11 +551,63 @@ export function DashboardShell() {
       setStatusMessage(error instanceof Error ? error.message : "Failed to save notes.");
     } finally {
       setIsBusy(false);
+      setActivity("idle");
+    }
+  }
+
+  async function handleRunDemo() {
+    if (!session) {
+      setStatusMessage("Sign in first so the demo can set up your workspace.");
+      return;
+    }
+
+    setIsBusy(true);
+    setActivity("demo");
+
+    try {
+      if (!accounts.length) {
+        const connect = await api.getGmailConnectUrl(session.token, REDIRECT_URI);
+        await api.completeGmailCallback(session.token, {
+          code: connect.mode === "mock" ? "mock-code" : "replace-with-code",
+          state: connect.state,
+          redirectUri: REDIRECT_URI,
+        });
+      }
+
+      const latestAccounts = await api.listGmailAccounts(session.token);
+      setAccounts(latestAccounts.items);
+
+      if (!latestAccounts.items.length) {
+        throw new Error("Demo setup could not connect a Gmail inbox.");
+      }
+
+      await api.syncGmail(session.token, latestAccounts.items[0].id);
+      const refreshed = await api.refreshFollowUps(session.token);
+      const workspace = await loadWorkspaceData(session.token);
+      applyWorkspaceData({
+        ...workspace,
+        followUps: refreshed.items,
+      });
+      setStatusMessage(
+        `Demo ready: ${refreshed.items.length} follow-ups surfaced from your connected inbox flow.`,
+      );
+    } catch (error) {
+      setStatusMessage(error instanceof Error ? error.message : "Demo flow failed.");
+    } finally {
+      setIsBusy(false);
+      setActivity("idle");
     }
   }
 
   return (
     <main className="app-shell">
+      {isBusy ? (
+        <div className="loading-banner" aria-live="polite">
+          <span className="loading-dot" />
+          <strong>{getActivityLabel(activity)}</strong>
+          <span>Followup is updating your workspace.</span>
+        </div>
+      ) : null}
       <section className="hero">
         <p className="eyebrow">V1 focus: Gmail follow-ups for freelancers</p>
         <h1>Never lose a warm lead in your inbox again.</h1>
@@ -470,6 +615,14 @@ export function DashboardShell() {
           Followup flags stalled conversations, explains why they matter, and
           helps you send the next message faster.
         </p>
+        <div className="hero-actions">
+          <button className="primary-button" disabled={isBusy || !session} onClick={handleRunDemo}>
+            Run demo flow
+          </button>
+          <p className="helper-copy">
+            The fastest path: connect Gmail, sync recent threads, and surface your first missed follow-up.
+          </p>
+        </div>
       </section>
 
       <section className="panel-grid">
@@ -702,6 +855,26 @@ export function DashboardShell() {
             <div className="status-card">
               <strong>Status</strong>
               <p>{statusMessage}</p>
+              <div className="status-strip">
+                <span className={`mini-pill ${session ? "is-done" : ""}`}>Account</span>
+                <span className={`mini-pill ${hasConnectedInbox ? "is-done" : ""}`}>Inbox</span>
+                <span className={`mini-pill ${hasSyncedData ? "is-done" : ""}`}>Synced</span>
+                <span className={`mini-pill ${hasDetectedWork ? "is-done" : ""}`}>Flagged</span>
+              </div>
+            </div>
+            <div className="status-card">
+              <strong>Quick start</strong>
+              <div className="checklist">
+                {onboardingSteps.map((step) => (
+                  <div className={`checklist-item ${step.done ? "done" : ""}`} key={step.label}>
+                    <span className="checkmark">{step.done ? "Done" : "Next"}</span>
+                    <div>
+                      <strong>{step.label}</strong>
+                      <p>{step.helper}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
             <div className="status-card">
               <strong>Connected inboxes</strong>

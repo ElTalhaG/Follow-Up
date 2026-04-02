@@ -187,11 +187,11 @@
 
 ## Phase 16: Final Polish
 
-- `not started` Improve loading states
-- `not started` Add better error messages
-- `in progress` Make the dashboard feel polished and calm
-- `not started` Add onboarding that explains the first connection step
-- `not started` Prepare a demo flow that shows the product solving a real pain fast
+- `done` Improve loading states
+- `done` Add better error messages
+- `done` Make the dashboard feel polished and calm
+- `done` Add onboarding that explains the first connection step
+- `done` Prepare a demo flow that shows the product solving a real pain fast
 
 ## Phase 17: Optional v2 Features
 
@@ -222,10 +222,11 @@
 - `done` Phase 13
 - `done` Phase 14
 - `done` Phase 15
-- `not started` Phase 16 onward
+- `done` Phase 16
+- `not started` Phase 17 onward
 
 ## Next Best Move
 
-1. Move into Phase 16 with better loading states, clearer onboarding, and a polished demo flow.
+1. Decide which Phase 17 expansion creates the strongest wedge after Gmail: templates, Zapier, or mobile notifications.
 2. Add authenticated frontend polish for connect, sync, refresh, draft generation, and draft editing.
 3. Add support for multiple connected accounts when we expand testing.
