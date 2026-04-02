@@ -140,6 +140,10 @@ body::before {
   align-items: flex-start;
 }
 
+.conversation-head.compact-head h3 {
+  font-size: 1rem;
+}
+
 .conversation-head p,
 .reason,
 .draft-box p,
@@ -292,7 +296,8 @@ body::before {
 
 .history-item p,
 .status-card p,
-.empty-state p {
+.empty-state p,
+.helper-copy {
   margin: 6px 0 0;
   color: var(--muted);
 }

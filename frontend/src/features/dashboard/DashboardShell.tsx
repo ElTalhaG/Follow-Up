@@ -1,5 +1,12 @@
 import { FormEvent, useEffect, useState } from "react";
-import { api, type AuthResponse, type DraftRecord, type FollowUpItem, type GmailAccount } from "../../lib/api";
+import {
+  api,
+  type AuthResponse,
+  type ConversationItem,
+  type DraftRecord,
+  type FollowUpItem,
+  type GmailAccount,
+} from "../../lib/api";
 
 const REDIRECT_URI = "http://localhost:5173/oauth/google/callback";
 const DEFAULT_SNOOZE_DATE = "2026-04-03T09:00";
@@ -34,6 +41,7 @@ export function DashboardShell() {
   });
   const [session, setSession] = useState<AuthResponse | null>(null);
   const [accounts, setAccounts] = useState<GmailAccount[]>([]);
+  const [conversations, setConversations] = useState<ConversationItem[]>([]);
   const [followUps, setFollowUps] = useState<FollowUpItem[]>([]);
   const [draftHistory, setDraftHistory] = useState<DraftsByFollowUp>({});
   const [draftEditors, setDraftEditors] = useState<DraftEditors>({});
@@ -43,6 +51,7 @@ export function DashboardShell() {
   const openFollowUps = followUps.filter((item) => item.actionStatus === "open");
   const snoozedFollowUps = followUps.filter((item) => item.actionStatus === "snoozed");
   const completedFollowUps = followUps.filter((item) => item.actionStatus === "done");
+  const activeConversations = conversations.filter((item) => item.status !== "closed").slice(0, 4);
 
   useEffect(() => {
     const stored = window.localStorage.getItem("followup-session");
@@ -70,13 +79,15 @@ export function DashboardShell() {
   async function hydrateDashboard(token: string) {
     try {
       setIsBusy(true);
-      const [accountsResponse, followUpsResponse] = await Promise.all([
+      const [accountsResponse, followUpsResponse, conversationsResponse] = await Promise.all([
         api.listGmailAccounts(token),
         api.listFollowUps(token),
+        api.listConversations(token),
       ]);
 
       setAccounts(accountsResponse.items);
       setFollowUps(followUpsResponse.items);
+      setConversations(conversationsResponse.items);
       setStatusMessage("Dashboard synced from the real backend.");
     } catch (error) {
       setStatusMessage(error instanceof Error ? error.message : "Failed to load dashboard.");
@@ -145,8 +156,12 @@ export function DashboardShell() {
 
     try {
       const syncResult = await api.syncGmail(session.token, accounts[0].id);
-      const refreshed = await api.refreshFollowUps(session.token);
+      const [refreshed, conversationsResponse] = await Promise.all([
+        api.refreshFollowUps(session.token),
+        api.listConversations(session.token),
+      ]);
       setFollowUps(refreshed.items);
+      setConversations(conversationsResponse.items);
       setStatusMessage(
         `Synced ${syncResult.syncedThreads} threads and ${syncResult.syncedMessages} messages from Gmail.`,
       );
@@ -166,7 +181,9 @@ export function DashboardShell() {
 
     try {
       const response = await api.refreshFollowUps(session.token);
+      const conversationsResponse = await api.listConversations(session.token);
       setFollowUps(response.items);
+      setConversations(conversationsResponse.items);
       setStatusMessage(`Refreshed ${response.items.length} follow-ups.`);
     } catch (error) {
       setStatusMessage(error instanceof Error ? error.message : "Failed to refresh follow-ups.");
@@ -191,7 +208,9 @@ export function DashboardShell() {
         [followUpId]: history.items[0]?.content ?? "",
       }));
       const list = await api.listFollowUps(session.token);
+      const conversationsResponse = await api.listConversations(session.token);
       setFollowUps(list.items);
+      setConversations(conversationsResponse.items);
       setStatusMessage(`Generated a ${tone} draft.`);
     } catch (error) {
       setStatusMessage(error instanceof Error ? error.message : "Failed to generate draft.");
@@ -237,7 +256,9 @@ export function DashboardShell() {
       const history = await api.listDrafts(session.token, followUpId);
       setDraftHistory((current) => ({ ...current, [followUpId]: history.items }));
       const list = await api.listFollowUps(session.token);
+      const conversationsResponse = await api.listConversations(session.token);
       setFollowUps(list.items);
+      setConversations(conversationsResponse.items);
       setStatusMessage("Draft edits saved.");
     } catch (error) {
       setStatusMessage(error instanceof Error ? error.message : "Failed to save draft.");
@@ -261,7 +282,9 @@ export function DashboardShell() {
         status,
         remindAt: status === "SNOOZED" ? `${DEFAULT_SNOOZE_DATE}:00.000Z` : undefined,
       });
+      const conversationsResponse = await api.listConversations(session.token);
       setFollowUps(response.items);
+      setConversations(conversationsResponse.items);
       setStatusMessage(
         status === "DONE"
           ? "Marked follow-up as done."
@@ -279,6 +302,7 @@ export function DashboardShell() {
   function signOut() {
     setSession(null);
     setAccounts([]);
+    setConversations([]);
     setFollowUps([]);
     setDraftHistory({});
     setDraftEditors({});
@@ -524,9 +548,38 @@ export function DashboardShell() {
               <strong>Pipeline snapshot</strong>
               <ul className="feature-list">
                 <li>{openFollowUps.length} urgent follow-ups</li>
+                <li>{activeConversations.length} active conversations</li>
                 <li>{snoozedFollowUps.length} snoozed items</li>
                 <li>{completedFollowUps.length} completed items</li>
               </ul>
+            </div>
+            <div className="status-card">
+              <strong>Active conversations</strong>
+              {activeConversations.length === 0 ? (
+                <p>No active conversations yet. Sync Gmail to populate this view.</p>
+              ) : (
+                <div className="history-list">
+                  {activeConversations.map((conversation) => (
+                    <div className="history-item" key={conversation.id}>
+                      <div className="conversation-head compact-head">
+                        <div>
+                          <h3>{conversation.subject}</h3>
+                          <p>{conversation.contactName ?? conversation.contactEmail}</p>
+                        </div>
+                        <span className={`priority priority-${conversation.needsFollowUp ? "high" : "low"}`}>
+                          {conversation.status}
+                        </span>
+                      </div>
+                      <p>{conversation.latestMessage}</p>
+                      <p className="helper-copy">
+                        {conversation.followUpReason
+                          ? conversation.followUpReason
+                          : `Latest activity: ${formatDate(conversation.lastMessageAt)}`}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
             <div className="status-card">
               <strong>What this screen now does</strong>

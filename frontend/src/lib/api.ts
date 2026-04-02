@@ -40,6 +40,20 @@ export type DraftRecord = {
   createdAt: string;
 };
 
+export type ConversationItem = {
+  id: string;
+  subject: string;
+  contactName: string | null;
+  contactEmail: string;
+  status: "new" | "waiting" | "overdue" | "closed";
+  needsFollowUp: boolean;
+  followUpReason: string | null;
+  lastMessageAt: string;
+  lastInboundAt: string | null;
+  lastOutboundAt: string | null;
+  latestMessage: string;
+};
+
 async function request<T>(path: string, options: RequestInit = {}, token?: string) {
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...options,
@@ -125,6 +139,9 @@ export const api = {
   },
   listFollowUps(token: string) {
     return request<{ items: FollowUpItem[] }>("/follow-ups", {}, token);
+  },
+  listConversations(token: string) {
+    return request<{ items: ConversationItem[] }>("/conversations", {}, token);
   },
   updateFollowUpStatus(
     token: string,

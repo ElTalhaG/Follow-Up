@@ -114,9 +114,9 @@
 ## Phase 9: Build The Main Dashboard
 
 - `done` Create a clean dashboard after login
-- `in progress` Add sections for:
+- `done` Add sections for:
 - `done` urgent follow-ups
-- `not started` active conversations
+- `done` active conversations
 - `done` snoozed items
 - `done` completed items
 - `done` Show priority levels so the user knows what matters now
@@ -215,10 +215,11 @@
 - `done` Phase 6
 - `done` Phase 7
 - `done` Phase 8
-- `not started` Phase 9 onward
+- `done` Phase 9
+- `not started` Phase 10 onward
 
 ## Next Best Move
 
-1. Finish Phase 9 by adding a dedicated active-conversations view in the dashboard.
-2. Expand reminder controls in the dashboard.
-3. Add authenticated frontend polish for connect, sync, refresh, draft generation, and draft editing.
+1. Start Phase 10 by expanding reminder and snooze controls.
+2. Add authenticated frontend polish for connect, sync, refresh, draft generation, and draft editing.
+3. Begin Phase 11 message context improvements inside the dashboard.

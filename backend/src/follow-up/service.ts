@@ -16,6 +16,20 @@ type FollowUpListItem = {
   lastMessageAt: string;
 };
 
+type ConversationListItem = {
+  id: string;
+  subject: string;
+  contactName: string | null;
+  contactEmail: string;
+  status: "new" | "waiting" | "overdue" | "closed";
+  needsFollowUp: boolean;
+  followUpReason: string | null;
+  lastMessageAt: string;
+  lastInboundAt: string | null;
+  lastOutboundAt: string | null;
+  latestMessage: string;
+};
+
 type FollowUpAction = "OPEN" | "DONE" | "IGNORED" | "SNOOZED";
 
 type ConversationRecord = {
@@ -302,6 +316,28 @@ export async function listFollowUps(userId: string) {
         right.lastMessageAt.localeCompare(left.lastMessageAt)
       );
     });
+}
+
+export async function listConversations(userId: string) {
+  const conversations = await getUserConversations(userId);
+
+  return conversations.map((conversation) => {
+    const latestMessage = conversation.messages[conversation.messages.length - 1];
+
+    return {
+      id: conversation.id,
+      subject: conversation.subject,
+      contactName: conversation.contactName,
+      contactEmail: conversation.contactEmail,
+      status: normalizeStatus(conversation.status),
+      needsFollowUp: conversation.needsFollowUp,
+      followUpReason: conversation.followUpReason,
+      lastMessageAt: conversation.lastMessageAt.toISOString(),
+      lastInboundAt: conversation.lastInboundAt?.toISOString() ?? null,
+      lastOutboundAt: conversation.lastOutboundAt?.toISOString() ?? null,
+      latestMessage: latestMessage?.bodyExcerpt ?? "",
+    } satisfies ConversationListItem;
+  });
 }
 
 export async function updateFollowUpStatus(

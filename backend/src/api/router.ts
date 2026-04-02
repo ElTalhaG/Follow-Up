@@ -13,6 +13,7 @@ import {
   syncGmailAccount,
 } from "../integrations/gmail.js";
 import {
+  listConversations,
   listFollowUps,
   refreshFollowUps,
   updateFollowUpStatus,
@@ -69,6 +70,17 @@ export function buildRouter() {
       }
 
       const items = await updateFollowUpStatus(user.id, followUpId, status, remindAt);
+      response.json({ items });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  router.get("/conversations", async (request, response, next) => {
+    try {
+      const user = await getUserFromBearerToken(request.headers.authorization);
+      const items = await listConversations(user.id);
+
       response.json({ items });
     } catch (error) {
       next(error);
