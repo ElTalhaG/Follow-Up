@@ -175,7 +175,7 @@
 - `done` Test follow-up draft generation
 - `done` Test reminder creation and dismissal
 - `done` Test editing and sending a draft
-- `not started` Test multiple accounts if supported
+- `done` Test multiple accounts if supported
 
 ## Phase 15: Refactor The Code
 
@@ -220,10 +220,11 @@
 - `done` Phase 11
 - `done` Phase 12
 - `done` Phase 13
-- `not started` Phase 14 onward
+- `done` Phase 14
+- `not started` Phase 15 onward
 
 ## Next Best Move
 
-1. Expand Phase 14 with multi-account and edge-case test coverage.
+1. Start Phase 15 refactoring by separating repeated dashboard hydration and backend workflow helpers.
 2. Add authenticated frontend polish for connect, sync, refresh, draft generation, and draft editing.
 3. Add support for multiple connected accounts when we expand testing.
