@@ -92,6 +92,13 @@ AUTH_SECRET=...
 GMAIL_CLIENT_ID=...
 GMAIL_CLIENT_SECRET=...
 VITE_API_BASE_URL=http://localhost:4000/api
+VITE_GMAIL_REDIRECT_URI=http://localhost:5173/oauth/google/callback
+```
+
+Frontend example env:
+
+```bash
+cp frontend/.env.example frontend/.env
 ```
 
 Current backend Gmail endpoints:

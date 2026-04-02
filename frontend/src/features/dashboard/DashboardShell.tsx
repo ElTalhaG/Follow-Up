@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import {
   api,
   type AnalyticsSummary,
@@ -11,8 +11,8 @@ import {
   type TaskSummary,
 } from "../../lib/api";
 
-const REDIRECT_URI = "http://localhost:5173/oauth/google/callback";
 const DEFAULT_SNOOZE_DATE = "2026-04-03T09:00";
+const DEMO_AFTER_OAUTH_KEY = "followup-demo-after-oauth";
 
 type AuthMode = "login" | "register";
 type DraftsByFollowUp = Record<string, DraftRecord[]>;
@@ -89,6 +89,37 @@ function getActivityLabel(activity: ActivityState) {
   }
 }
 
+function getGmailRedirectUri() {
+  const configured = import.meta.env.VITE_GMAIL_REDIRECT_URI?.toString().trim();
+
+  if (configured) {
+    return configured;
+  }
+
+  if (typeof window !== "undefined") {
+    return `${window.location.origin}/oauth/google/callback`;
+  }
+
+  return "http://localhost:5173/oauth/google/callback";
+}
+
+function readOAuthCallbackParams() {
+  if (typeof window === "undefined" || window.location.pathname !== "/oauth/google/callback") {
+    return null;
+  }
+
+  const params = new URLSearchParams(window.location.search);
+  const code = params.get("code");
+  const state = params.get("state");
+  const error = params.get("error");
+
+  return {
+    code,
+    state,
+    error,
+  };
+}
+
 export function DashboardShell() {
   const [authMode, setAuthMode] = useState<AuthMode>("register");
   const [authInput, setAuthInput] = useState({
@@ -113,6 +144,7 @@ export function DashboardShell() {
   const [statusMessage, setStatusMessage] = useState("Sign in to unlock Gmail sync and follow-up actions.");
   const [isBusy, setIsBusy] = useState(false);
   const [activity, setActivity] = useState<ActivityState>("idle");
+  const oauthCallbackHandled = useRef(false);
 
   const openFollowUps = followUps.filter((item) => item.actionStatus === "open");
   const snoozedFollowUps = followUps.filter((item) => item.actionStatus === "snoozed");
@@ -166,6 +198,86 @@ export function DashboardShell() {
     }
 
     void hydrateDashboard(session.token);
+  }, [session]);
+
+  useEffect(() => {
+    if (!session || oauthCallbackHandled.current) {
+      return;
+    }
+
+    const callback = readOAuthCallbackParams();
+
+    if (!callback) {
+      return;
+    }
+
+    oauthCallbackHandled.current = true;
+
+    if (callback.error) {
+      setStatusMessage(
+        `Gmail connection was not completed: ${callback.error.replace(/_/g, " ")}.`,
+      );
+      window.history.replaceState({}, "", "/");
+      return;
+    }
+
+    if (!callback.code || !callback.state) {
+      setStatusMessage("Gmail callback is missing required OAuth details.");
+      window.history.replaceState({}, "", "/");
+      return;
+    }
+
+    const code = callback.code;
+    const state = callback.state;
+
+    void (async () => {
+      try {
+        setIsBusy(true);
+        setActivity("connect");
+
+        await api.completeGmailCallback(session.token, {
+          code,
+          state,
+          redirectUri: getGmailRedirectUri(),
+        });
+        const shouldContinueDemo = window.sessionStorage.getItem(DEMO_AFTER_OAUTH_KEY) === "true";
+
+        if (shouldContinueDemo) {
+          window.sessionStorage.removeItem(DEMO_AFTER_OAUTH_KEY);
+          const latestAccounts = await api.listGmailAccounts(session.token);
+          setAccounts(latestAccounts.items);
+
+          if (latestAccounts.items[0]) {
+            await api.syncGmail(session.token, latestAccounts.items[0].id);
+            const refreshed = await api.refreshFollowUps(session.token);
+            const workspace = await loadWorkspaceData(session.token);
+            applyWorkspaceData({
+              ...workspace,
+              followUps: refreshed.items,
+            });
+            setStatusMessage(
+              `Demo ready: ${refreshed.items.length} follow-ups surfaced from your connected inbox flow.`,
+            );
+          } else {
+            await hydrateDashboard(session.token);
+            setStatusMessage("Gmail connected, but no inbox account was returned.");
+          }
+        } else {
+          await hydrateDashboard(session.token);
+          setStatusMessage("Gmail connected in read-only mode.");
+        }
+      } catch (error) {
+        setStatusMessage(
+          error instanceof Error
+            ? error.message
+            : "Failed to finish the Gmail connection.",
+        );
+      } finally {
+        window.history.replaceState({}, "", "/");
+        setIsBusy(false);
+        setActivity("idle");
+      }
+    })();
   }, [session]);
 
   function mergeConversationNotes(items: ConversationItem[]) {
@@ -263,7 +375,7 @@ export function DashboardShell() {
     }
   }
 
-  async function handleMockGmailConnect() {
+  async function handleGmailConnect() {
     if (!session) {
       return;
     }
@@ -272,11 +384,19 @@ export function DashboardShell() {
     setActivity("connect");
 
     try {
-      const connect = await api.getGmailConnectUrl(session.token, REDIRECT_URI);
+      const redirectUri = getGmailRedirectUri();
+      const connect = await api.getGmailConnectUrl(session.token, redirectUri);
+
+      if (connect.mode === "live") {
+        setStatusMessage("Redirecting to Gmail to approve read-only inbox access.");
+        window.location.assign(connect.url);
+        return;
+      }
+
       await api.completeGmailCallback(session.token, {
-        code: connect.mode === "mock" ? "mock-code" : "replace-with-code",
+        code: "mock-code",
         state: connect.state,
-        redirectUri: REDIRECT_URI,
+        redirectUri,
       });
       await hydrateDashboard(session.token);
       setStatusMessage("Gmail connected in read-only mode.");
@@ -566,11 +686,20 @@ export function DashboardShell() {
 
     try {
       if (!accounts.length) {
-        const connect = await api.getGmailConnectUrl(session.token, REDIRECT_URI);
+        const redirectUri = getGmailRedirectUri();
+        const connect = await api.getGmailConnectUrl(session.token, redirectUri);
+
+        if (connect.mode === "live") {
+          window.sessionStorage.setItem(DEMO_AFTER_OAUTH_KEY, "true");
+          setStatusMessage("Redirecting to Gmail so the demo flow can finish setup.");
+          window.location.assign(connect.url);
+          return;
+        }
+
         await api.completeGmailCallback(session.token, {
-          code: connect.mode === "mock" ? "mock-code" : "replace-with-code",
+          code: "mock-code",
           state: connect.state,
-          redirectUri: REDIRECT_URI,
+          redirectUri,
         });
       }
 
@@ -695,7 +824,7 @@ export function DashboardShell() {
                   <p>{session.user.email}</p>
                 </div>
                 <div className="button-row">
-                  <button className="secondary-button" disabled={isBusy} onClick={handleMockGmailConnect}>
+                  <button className="secondary-button" disabled={isBusy} onClick={handleGmailConnect}>
                     Connect Gmail
                   </button>
                   <button className="secondary-button" disabled={isBusy} onClick={handleSync}>

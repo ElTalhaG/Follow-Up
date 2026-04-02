@@ -227,6 +227,6 @@
 
 ## Next Best Move
 
-1. Decide which Phase 17 expansion creates the strongest wedge after Gmail: templates, Zapier, or mobile notifications.
-2. Add authenticated frontend polish for connect, sync, refresh, draft generation, and draft editing.
-3. Add support for multiple connected accounts when we expand testing.
+1. Move into production readiness: PostgreSQL, deployment config, and hosted staging.
+2. Finish real Gmail OAuth validation against a live Google app and hosted callback URL.
+3. Add Stripe and private beta onboarding once staging is stable.
