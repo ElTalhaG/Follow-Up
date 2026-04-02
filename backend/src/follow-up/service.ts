@@ -73,6 +73,13 @@ type ConversationRecord = {
     remindAt: Date;
     status: "ACTIVE" | "DISMISSED" | "SENT";
   }>;
+  tasks?: Array<{
+    id: string;
+    title: string;
+    status: "OPEN" | "DONE" | "CANCELED";
+    dueAt: Date | null;
+    createdAt: Date;
+  }>;
 };
 
 type DetectionResult = {
@@ -197,6 +204,9 @@ async function getUserConversations(userId: string) {
           remindAt: "asc",
         },
       },
+      tasks: {
+        orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+      },
     },
     orderBy: {
       lastMessageAt: "desc",
@@ -209,6 +219,7 @@ export async function refreshFollowUps(userId: string) {
   const followUpDelegate = prisma.followUp as any;
   const conversationDelegate = prisma.conversation as any;
   const reminderDelegate = prisma.reminder as any;
+  const taskDelegate = prisma.task as any;
 
   for (const conversation of conversations) {
     const detection = detectFollowUpNeed(conversation);
@@ -234,6 +245,17 @@ export async function refreshFollowUps(userId: string) {
           data: {
             status: "DONE",
             completedAt: new Date(),
+          },
+        });
+      }
+
+      const openTask = conversation.tasks?.find((task) => task.status === "OPEN");
+
+      if (openTask) {
+        await taskDelegate.update({
+          where: { id: openTask.id },
+          data: {
+            status: "DONE",
           },
         });
       }
@@ -266,6 +288,7 @@ export async function refreshFollowUps(userId: string) {
     }
 
     const activeReminder = conversation.reminders[0];
+    const openTask = conversation.tasks?.find((task) => task.status === "OPEN");
 
     if (!activeReminder) {
       const remindAt = new Date();
@@ -276,6 +299,25 @@ export async function refreshFollowUps(userId: string) {
           conversationId: conversation.id,
           remindAt,
           status: "ACTIVE",
+        },
+      });
+    }
+
+    if (!openTask) {
+      await taskDelegate.create({
+        data: {
+          conversationId: conversation.id,
+          title: `Follow up on ${conversation.subject}`,
+          status: "OPEN",
+          dueAt: activeReminder?.remindAt ?? new Date(Date.now() + 4 * 60 * 60 * 1000),
+        },
+      });
+    } else {
+      await taskDelegate.update({
+        where: { id: openTask.id },
+        data: {
+          title: `Follow up on ${conversation.subject}`,
+          dueAt: activeReminder?.remindAt ?? openTask.dueAt,
         },
       });
     }
@@ -348,6 +390,7 @@ export async function updateFollowUpStatus(
 ) {
   const followUpDelegate = prisma.followUp as any;
   const reminderDelegate = prisma.reminder as any;
+  const taskDelegate = prisma.task as any;
 
   const followUp = await followUpDelegate.findUnique({
     where: { id: followUpId },
@@ -382,6 +425,25 @@ export async function updateFollowUpStatus(
         conversationId: followUp.conversationId,
         remindAt: new Date(remindAt),
         status: "ACTIVE",
+      },
+    });
+  }
+
+  const openTask = await taskDelegate.findFirst({
+    where: {
+      conversationId: followUp.conversationId,
+      status: "OPEN",
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+
+  if (openTask && (status === "DONE" || status === "IGNORED")) {
+    await taskDelegate.update({
+      where: { id: openTask.id },
+      data: {
+        status: status === "DONE" ? "DONE" : "CANCELED",
       },
     });
   }

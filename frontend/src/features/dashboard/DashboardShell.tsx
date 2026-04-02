@@ -6,6 +6,8 @@ import {
   type DraftRecord,
   type FollowUpItem,
   type GmailAccount,
+  type ReminderItem,
+  type TaskSummary,
 } from "../../lib/api";
 
 const REDIRECT_URI = "http://localhost:5173/oauth/google/callback";
@@ -43,6 +45,12 @@ export function DashboardShell() {
   const [accounts, setAccounts] = useState<GmailAccount[]>([]);
   const [conversations, setConversations] = useState<ConversationItem[]>([]);
   const [followUps, setFollowUps] = useState<FollowUpItem[]>([]);
+  const [reminders, setReminders] = useState<ReminderItem[]>([]);
+  const [taskSummary, setTaskSummary] = useState<TaskSummary>({
+    open: 0,
+    done: 0,
+    canceled: 0,
+  });
   const [draftHistory, setDraftHistory] = useState<DraftsByFollowUp>({});
   const [draftEditors, setDraftEditors] = useState<DraftEditors>({});
   const [statusMessage, setStatusMessage] = useState("Sign in to unlock Gmail sync and follow-up actions.");
@@ -52,6 +60,7 @@ export function DashboardShell() {
   const snoozedFollowUps = followUps.filter((item) => item.actionStatus === "snoozed");
   const completedFollowUps = followUps.filter((item) => item.actionStatus === "done");
   const activeConversations = conversations.filter((item) => item.status !== "closed").slice(0, 4);
+  const dueReminders = reminders.filter((item) => item.isDue);
 
   useEffect(() => {
     const stored = window.localStorage.getItem("followup-session");
@@ -79,15 +88,19 @@ export function DashboardShell() {
   async function hydrateDashboard(token: string) {
     try {
       setIsBusy(true);
-      const [accountsResponse, followUpsResponse, conversationsResponse] = await Promise.all([
+      const [accountsResponse, followUpsResponse, conversationsResponse, remindersResponse] =
+        await Promise.all([
         api.listGmailAccounts(token),
         api.listFollowUps(token),
         api.listConversations(token),
+        api.listReminders(token),
       ]);
 
       setAccounts(accountsResponse.items);
       setFollowUps(followUpsResponse.items);
       setConversations(conversationsResponse.items);
+      setReminders(remindersResponse.items);
+      setTaskSummary(remindersResponse.tasks);
       setStatusMessage("Dashboard synced from the real backend.");
     } catch (error) {
       setStatusMessage(error instanceof Error ? error.message : "Failed to load dashboard.");
@@ -156,12 +169,15 @@ export function DashboardShell() {
 
     try {
       const syncResult = await api.syncGmail(session.token, accounts[0].id);
-      const [refreshed, conversationsResponse] = await Promise.all([
+      const [refreshed, conversationsResponse, remindersResponse] = await Promise.all([
         api.refreshFollowUps(session.token),
         api.listConversations(session.token),
+        api.listReminders(session.token),
       ]);
       setFollowUps(refreshed.items);
       setConversations(conversationsResponse.items);
+      setReminders(remindersResponse.items);
+      setTaskSummary(remindersResponse.tasks);
       setStatusMessage(
         `Synced ${syncResult.syncedThreads} threads and ${syncResult.syncedMessages} messages from Gmail.`,
       );
@@ -180,10 +196,15 @@ export function DashboardShell() {
     setIsBusy(true);
 
     try {
-      const response = await api.refreshFollowUps(session.token);
-      const conversationsResponse = await api.listConversations(session.token);
+      const [response, conversationsResponse, remindersResponse] = await Promise.all([
+        api.refreshFollowUps(session.token),
+        api.listConversations(session.token),
+        api.listReminders(session.token),
+      ]);
       setFollowUps(response.items);
       setConversations(conversationsResponse.items);
+      setReminders(remindersResponse.items);
+      setTaskSummary(remindersResponse.tasks);
       setStatusMessage(`Refreshed ${response.items.length} follow-ups.`);
     } catch (error) {
       setStatusMessage(error instanceof Error ? error.message : "Failed to refresh follow-ups.");
@@ -207,10 +228,15 @@ export function DashboardShell() {
         ...current,
         [followUpId]: history.items[0]?.content ?? "",
       }));
-      const list = await api.listFollowUps(session.token);
-      const conversationsResponse = await api.listConversations(session.token);
+      const [list, conversationsResponse, remindersResponse] = await Promise.all([
+        api.listFollowUps(session.token),
+        api.listConversations(session.token),
+        api.listReminders(session.token),
+      ]);
       setFollowUps(list.items);
       setConversations(conversationsResponse.items);
+      setReminders(remindersResponse.items);
+      setTaskSummary(remindersResponse.tasks);
       setStatusMessage(`Generated a ${tone} draft.`);
     } catch (error) {
       setStatusMessage(error instanceof Error ? error.message : "Failed to generate draft.");
@@ -255,10 +281,15 @@ export function DashboardShell() {
       await api.updateDraft(session.token, currentDraft.id, content);
       const history = await api.listDrafts(session.token, followUpId);
       setDraftHistory((current) => ({ ...current, [followUpId]: history.items }));
-      const list = await api.listFollowUps(session.token);
-      const conversationsResponse = await api.listConversations(session.token);
+      const [list, conversationsResponse, remindersResponse] = await Promise.all([
+        api.listFollowUps(session.token),
+        api.listConversations(session.token),
+        api.listReminders(session.token),
+      ]);
       setFollowUps(list.items);
       setConversations(conversationsResponse.items);
+      setReminders(remindersResponse.items);
+      setTaskSummary(remindersResponse.tasks);
       setStatusMessage("Draft edits saved.");
     } catch (error) {
       setStatusMessage(error instanceof Error ? error.message : "Failed to save draft.");
@@ -282,9 +313,14 @@ export function DashboardShell() {
         status,
         remindAt: status === "SNOOZED" ? `${DEFAULT_SNOOZE_DATE}:00.000Z` : undefined,
       });
-      const conversationsResponse = await api.listConversations(session.token);
+      const [conversationsResponse, remindersResponse] = await Promise.all([
+        api.listConversations(session.token),
+        api.listReminders(session.token),
+      ]);
       setFollowUps(response.items);
       setConversations(conversationsResponse.items);
+      setReminders(remindersResponse.items);
+      setTaskSummary(remindersResponse.tasks);
       setStatusMessage(
         status === "DONE"
           ? "Marked follow-up as done."
@@ -299,11 +335,61 @@ export function DashboardShell() {
     }
   }
 
+  async function handleReminderPreset(
+    conversationId: string,
+    preset: "later_today" | "tomorrow" | "next_week",
+  ) {
+    if (!session) {
+      return;
+    }
+
+    setIsBusy(true);
+
+    try {
+      await api.createReminder(session.token, conversationId, { preset });
+      const remindersResponse = await api.listReminders(session.token);
+      setReminders(remindersResponse.items);
+      setTaskSummary(remindersResponse.tasks);
+      setStatusMessage(
+        preset === "later_today"
+          ? "Reminder set for later today."
+          : preset === "tomorrow"
+            ? "Reminder set for tomorrow morning."
+            : "Reminder set for next week.",
+      );
+    } catch (error) {
+      setStatusMessage(error instanceof Error ? error.message : "Failed to set reminder.");
+    } finally {
+      setIsBusy(false);
+    }
+  }
+
+  async function handleDismissReminder(reminderId: string) {
+    if (!session) {
+      return;
+    }
+
+    setIsBusy(true);
+
+    try {
+      const response = await api.dismissReminder(session.token, reminderId);
+      setReminders(response.items);
+      setTaskSummary(response.tasks);
+      setStatusMessage("Reminder dismissed.");
+    } catch (error) {
+      setStatusMessage(error instanceof Error ? error.message : "Failed to dismiss reminder.");
+    } finally {
+      setIsBusy(false);
+    }
+  }
+
   function signOut() {
     setSession(null);
     setAccounts([]);
     setConversations([]);
     setFollowUps([]);
+    setReminders([]);
+    setTaskSummary({ open: 0, done: 0, canceled: 0 });
     setDraftHistory({});
     setDraftEditors({});
     window.localStorage.removeItem("followup-session");
@@ -502,6 +588,27 @@ export function DashboardShell() {
                           >
                             Ignore
                           </button>
+                          <button
+                            className="ghost-button"
+                            disabled={isBusy}
+                            onClick={() => handleReminderPreset(conversation.conversationId, "later_today")}
+                          >
+                            Later today
+                          </button>
+                          <button
+                            className="ghost-button"
+                            disabled={isBusy}
+                            onClick={() => handleReminderPreset(conversation.conversationId, "tomorrow")}
+                          >
+                            Tomorrow
+                          </button>
+                          <button
+                            className="ghost-button"
+                            disabled={isBusy}
+                            onClick={() => handleReminderPreset(conversation.conversationId, "next_week")}
+                          >
+                            Next week
+                          </button>
                         </div>
                       </div>
                       {draftHistory[conversation.id]?.length ? (
@@ -551,6 +658,7 @@ export function DashboardShell() {
                 <li>{activeConversations.length} active conversations</li>
                 <li>{snoozedFollowUps.length} snoozed items</li>
                 <li>{completedFollowUps.length} completed items</li>
+                <li>{dueReminders.length} reminders due now</li>
               </ul>
             </div>
             <div className="status-card">
@@ -582,6 +690,46 @@ export function DashboardShell() {
               )}
             </div>
             <div className="status-card">
+              <strong>Reminder queue</strong>
+              {reminders.length === 0 ? (
+                <p>No active reminders yet.</p>
+              ) : (
+                <div className="history-list">
+                  {reminders.slice(0, 4).map((reminder) => (
+                    <div className="history-item" key={reminder.id}>
+                      <div className="conversation-head compact-head">
+                        <div>
+                          <h3>{reminder.subject}</h3>
+                          <p>{reminder.contactName ?? reminder.contactEmail}</p>
+                        </div>
+                        <span className={`priority ${reminder.isDue ? "priority-high" : "priority-low"}`}>
+                          {reminder.isDue ? "Due" : "Scheduled"}
+                        </span>
+                      </div>
+                      <p className="helper-copy">Reminder: {formatDate(reminder.remindAt)}</p>
+                      <div className="button-row compact">
+                        <button
+                          className="ghost-button"
+                          disabled={isBusy}
+                          onClick={() => handleDismissReminder(reminder.id)}
+                        >
+                          Dismiss
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="status-card">
+              <strong>Task summary</strong>
+              <ul className="feature-list">
+                <li>{taskSummary.open} open tasks</li>
+                <li>{taskSummary.done} completed tasks</li>
+                <li>{taskSummary.canceled} canceled tasks</li>
+              </ul>
+            </div>
+            <div className="status-card">
               <strong>What this screen now does</strong>
               <ul className="feature-list">
                 <li>Authenticates against the real backend</li>
@@ -589,6 +737,7 @@ export function DashboardShell() {
                 <li>Syncs inbox threads and refreshes follow-up detection</li>
                 <li>Generates, edits, and stores draft history</li>
                 <li>Updates follow-up status without leaving the dashboard</li>
+                <li>Sets reminders and shows what is due now</li>
               </ul>
             </div>
           </div>

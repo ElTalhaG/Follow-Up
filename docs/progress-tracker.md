@@ -125,14 +125,14 @@
 
 ## Phase 10: Add Reminder And Task Logic
 
-- `not started` Let the user set reminders on conversations
-- `not started` Add snooze options like:
-- `not started` later today
-- `not started` tomorrow
-- `not started` next week
-- `not started` Track task status in the database
-- `not started` Notify the user when a follow-up is due
-- `not started` Keep the reminder system lightweight and useful
+- `done` Let the user set reminders on conversations
+- `done` Add snooze options like:
+- `done` later today
+- `done` tomorrow
+- `done` next week
+- `done` Track task status in the database
+- `done` Notify the user when a follow-up is due
+- `done` Keep the reminder system lightweight and useful
 
 ## Phase 11: Improve Message Context
 
@@ -216,10 +216,11 @@
 - `done` Phase 7
 - `done` Phase 8
 - `done` Phase 9
-- `not started` Phase 10 onward
+- `done` Phase 10
+- `not started` Phase 11 onward
 
 ## Next Best Move
 
-1. Start Phase 10 by expanding reminder and snooze controls.
+1. Start Phase 11 message context improvements inside the dashboard.
 2. Add authenticated frontend polish for connect, sync, refresh, draft generation, and draft editing.
-3. Begin Phase 11 message context improvements inside the dashboard.
+3. Add support for multiple connected accounts when we expand testing.

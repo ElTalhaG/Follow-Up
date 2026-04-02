@@ -54,6 +54,23 @@ export type ConversationItem = {
   latestMessage: string;
 };
 
+export type ReminderItem = {
+  id: string;
+  conversationId: string;
+  subject: string;
+  contactName: string | null;
+  contactEmail: string;
+  remindAt: string;
+  isDue: boolean;
+  status: "active" | "dismissed" | "sent";
+};
+
+export type TaskSummary = {
+  open: number;
+  done: number;
+  canceled: number;
+};
+
 async function request<T>(path: string, options: RequestInit = {}, token?: string) {
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...options,
@@ -176,6 +193,33 @@ export const api = {
       {
         method: "PATCH",
         body: JSON.stringify({ content }),
+      },
+      token,
+    );
+  },
+  listReminders(token: string) {
+    return request<{ items: ReminderItem[]; tasks: TaskSummary }>("/reminders", {}, token);
+  },
+  createReminder(
+    token: string,
+    conversationId: string,
+    input: { preset?: "later_today" | "tomorrow" | "next_week"; remindAt?: string },
+  ) {
+    return request<{ reminder: { id: string; conversationId: string; remindAt: string; status: string } }>(
+      `/conversations/${conversationId}/reminders`,
+      {
+        method: "POST",
+        body: JSON.stringify(input),
+      },
+      token,
+    );
+  },
+  dismissReminder(token: string, reminderId: string) {
+    return request<{ items: ReminderItem[]; tasks: TaskSummary }>(
+      `/reminders/${reminderId}/dismiss`,
+      {
+        method: "POST",
+        body: JSON.stringify({}),
       },
       token,
     );

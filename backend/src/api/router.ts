@@ -19,6 +19,12 @@ import {
   updateFollowUpStatus,
 } from "../follow-up/service.js";
 import { generateDraft, listDraftHistory, updateDraftContent } from "../follow-up/drafts.js";
+import {
+  createConversationReminder,
+  dismissReminder,
+  listReminders,
+  listTaskSummary,
+} from "../follow-up/reminders.js";
 
 export function buildRouter() {
   const router = Router();
@@ -82,6 +88,63 @@ export function buildRouter() {
       const items = await listConversations(user.id);
 
       response.json({ items });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  router.get("/reminders", async (request, response, next) => {
+    try {
+      const user = await getUserFromBearerToken(request.headers.authorization);
+      const [items, tasks] = await Promise.all([
+        listReminders(user.id),
+        listTaskSummary(user.id),
+      ]);
+
+      response.json({ items, tasks });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  router.post("/conversations/:conversationId/reminders", async (request, response, next) => {
+    try {
+      const user = await getUserFromBearerToken(request.headers.authorization);
+      const conversationId = String(request.params.conversationId ?? "");
+      const remindAt =
+        request.body.remindAt === undefined ? undefined : String(request.body.remindAt);
+      const preset =
+        request.body.preset === undefined ? undefined : String(request.body.preset);
+
+      const reminder = await createConversationReminder(user.id, conversationId, {
+        remindAt,
+        preset: preset as "later_today" | "tomorrow" | "next_week" | undefined,
+      });
+
+      response.status(201).json({
+        reminder: {
+          id: reminder.id,
+          conversationId: reminder.conversationId,
+          remindAt: reminder.remindAt.toISOString(),
+          status: reminder.status.toLowerCase(),
+        },
+      });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  router.post("/reminders/:reminderId/dismiss", async (request, response, next) => {
+    try {
+      const user = await getUserFromBearerToken(request.headers.authorization);
+      const reminderId = String(request.params.reminderId ?? "");
+      await dismissReminder(user.id, reminderId);
+      const [items, tasks] = await Promise.all([
+        listReminders(user.id),
+        listTaskSummary(user.id),
+      ]);
+
+      response.json({ items, tasks });
     } catch (error) {
       next(error);
     }
