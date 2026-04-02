@@ -113,13 +113,13 @@
 
 ## Phase 9: Build The Main Dashboard
 
-- `in progress` Create a clean dashboard after login
+- `done` Create a clean dashboard after login
 - `in progress` Add sections for:
-- `in progress` urgent follow-ups
+- `done` urgent follow-ups
 - `not started` active conversations
-- `not started` snoozed items
-- `not started` completed items
-- `in progress` Show priority levels so the user knows what matters now
+- `done` snoozed items
+- `done` completed items
+- `done` Show priority levels so the user knows what matters now
 - `done` Keep the interface simple and fast
 - `done` Make the product feel like a focused assistant, not a complicated CRM
 
@@ -219,6 +219,6 @@
 
 ## Next Best Move
 
-1. Start Phase 9 by wiring the dashboard to the real auth, Gmail, follow-up, and draft APIs.
+1. Finish Phase 9 by adding a dedicated active-conversations view in the dashboard.
 2. Expand reminder controls in the dashboard.
-3. Add authenticated frontend flows for connect, sync, refresh, draft generation, and draft editing.
+3. Add authenticated frontend polish for connect, sync, refresh, draft generation, and draft editing.
