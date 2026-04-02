@@ -47,6 +47,12 @@ type ConversationRecord = {
     priority: string;
     suggestedAt: Date;
     completedAt: Date | null;
+    drafts?: Array<{
+      id: string;
+      tone: string;
+      content: string;
+      createdAt: Date;
+    }>;
   }>;
   reminders: Array<{
     id: string;
@@ -163,6 +169,11 @@ async function getUserConversations(userId: string) {
       },
       followUps: {
         orderBy: [{ suggestedAt: "desc" }, { id: "desc" }],
+        include: {
+          drafts: {
+            orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+          },
+        },
       },
       reminders: {
         where: {
@@ -277,7 +288,8 @@ export async function listFollowUps(userId: string) {
         status: normalizeStatus(conversation.status),
         priority: latestFollowUp.priority as FollowUpListItem["priority"],
         followUpReason: latestFollowUp.reason,
-        suggestedDraft: buildSuggestedDraft(conversation),
+        suggestedDraft:
+          latestFollowUp.drafts?.[0]?.content ?? buildSuggestedDraft(conversation),
         actionStatus: toActionStatus(latestFollowUp.status),
         remindAt: activeReminder?.remindAt.toISOString() ?? null,
         lastMessageAt: conversation.lastMessageAt.toISOString(),

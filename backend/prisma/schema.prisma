@@ -111,6 +111,7 @@ model FollowUp {
   suggestedAt    DateTime       @default(now())
   completedAt    DateTime?
   conversation   Conversation   @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  drafts         Draft[]
 }
 
 model Task {
@@ -130,4 +131,13 @@ model Reminder {
   status         ReminderStatus
   createdAt      DateTime       @default(now())
   conversation   Conversation   @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+}
+
+model Draft {
+  id         String   @id @default(cuid())
+  followUpId String
+  tone       String
+  content    String
+  createdAt  DateTime @default(now())
+  followUp   FollowUp @relation(fields: [followUpId], references: [id], onDelete: Cascade)
 }

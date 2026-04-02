@@ -101,14 +101,14 @@
 
 ## Phase 8: Build AI Drafting
 
-- `not started` Create a follow-up draft generator
-- `in progress` Make the draft short, polite, and context-aware
-- `not started` Add tone options like:
-- `not started` friendly
-- `not started` professional
-- `not started` direct
-- `not started` Let the user edit before sending
-- `not started` Keep a history of generated drafts
+- `done` Create a follow-up draft generator
+- `done` Make the draft short, polite, and context-aware
+- `done` Add tone options like:
+- `done` friendly
+- `done` professional
+- `done` direct
+- `done` Let the user edit before sending
+- `done` Keep a history of generated drafts
 - `done` Do not auto-send messages in v1
 
 ## Phase 9: Build The Main Dashboard
@@ -172,9 +172,9 @@
 - `done` Test registration and login
 - `done` Test inbox sync
 - `done` Test stalled conversation detection
-- `not started` Test follow-up draft generation
+- `done` Test follow-up draft generation
 - `done` Test reminder creation and dismissal
-- `not started` Test editing and sending a draft
+- `done` Test editing and sending a draft
 - `not started` Test multiple accounts if supported
 
 ## Phase 15: Refactor The Code
@@ -214,10 +214,11 @@
 - `done` Phase 5
 - `done` Phase 6
 - `done` Phase 7
-- `not started` Phase 8 onward
+- `done` Phase 8
+- `not started` Phase 9 onward
 
 ## Next Best Move
 
-1. Start Phase 8 draft generation on top of real follow-up records.
-2. Add authenticated frontend flows on top of the auth, Gmail, and follow-up APIs.
-3. Expand reminder controls in the dashboard.
+1. Start Phase 9 by wiring the dashboard to the real auth, Gmail, follow-up, and draft APIs.
+2. Expand reminder controls in the dashboard.
+3. Add authenticated frontend flows for connect, sync, refresh, draft generation, and draft editing.

@@ -17,6 +17,7 @@ import {
   refreshFollowUps,
   updateFollowUpStatus,
 } from "../follow-up/service.js";
+import { generateDraft, listDraftHistory, updateDraftContent } from "../follow-up/drafts.js";
 
 export function buildRouter() {
   const router = Router();
@@ -69,6 +70,44 @@ export function buildRouter() {
 
       const items = await updateFollowUpStatus(user.id, followUpId, status, remindAt);
       response.json({ items });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  router.post("/follow-ups/:followUpId/drafts", async (request, response, next) => {
+    try {
+      const user = await getUserFromBearerToken(request.headers.authorization);
+      const followUpId = String(request.params.followUpId ?? "");
+      const tone = String(request.body.tone ?? "professional").toLowerCase();
+      const draft = await generateDraft(user.id, followUpId, tone);
+
+      response.status(201).json({ draft });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  router.get("/follow-ups/:followUpId/drafts", async (request, response, next) => {
+    try {
+      const user = await getUserFromBearerToken(request.headers.authorization);
+      const followUpId = String(request.params.followUpId ?? "");
+      const drafts = await listDraftHistory(user.id, followUpId);
+
+      response.json({ items: drafts });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  router.patch("/drafts/:draftId", async (request, response, next) => {
+    try {
+      const user = await getUserFromBearerToken(request.headers.authorization);
+      const draftId = String(request.params.draftId ?? "");
+      const content = String(request.body.content ?? "");
+      const draft = await updateDraftContent(user.id, draftId, content);
+
+      response.json({ draft });
     } catch (error) {
       next(error);
     }

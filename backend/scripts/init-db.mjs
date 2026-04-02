@@ -26,6 +26,7 @@ db.exec(`
   DROP TABLE IF EXISTS "Conversation";
   DROP TABLE IF EXISTS "Account";
   DROP TABLE IF EXISTS "User";
+  DROP TABLE IF EXISTS "Draft";
 
   CREATE TABLE IF NOT EXISTS "User" (
     "id" TEXT NOT NULL PRIMARY KEY,
@@ -98,6 +99,15 @@ db.exec(`
     FOREIGN KEY ("conversationId") REFERENCES "Conversation"("id") ON DELETE CASCADE
   );
 
+  CREATE TABLE IF NOT EXISTS "Draft" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "followUpId" TEXT NOT NULL,
+    "tone" TEXT NOT NULL,
+    "content" TEXT NOT NULL,
+    "createdAt" DATETIME NOT NULL,
+    FOREIGN KEY ("followUpId") REFERENCES "FollowUp"("id") ON DELETE CASCADE
+  );
+
   CREATE TABLE IF NOT EXISTS "Task" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "conversationId" TEXT NOT NULL,
@@ -155,6 +165,11 @@ const insertFollowUp = db.prepare(`
 const insertTask = db.prepare(`
   INSERT INTO "Task" ("id", "conversationId", "title", "status", "dueAt", "createdAt")
   VALUES (?, ?, ?, ?, ?, ?)
+`);
+
+const insertDraft = db.prepare(`
+  INSERT INTO "Draft" ("id", "followUpId", "tone", "content", "createdAt")
+  VALUES (?, ?, ?, ?, ?)
 `);
 
 const insertReminder = db.prepare(`
@@ -309,6 +324,14 @@ insertFollowUp.run(
   "medium",
   now,
   null,
+);
+
+insertDraft.run(
+  "draft_1",
+  "followup_1",
+  "professional",
+  "Hi Maya, just following up in case my earlier note got buried. I'd be happy to help with the website redesign and can send a simple next-step plan today if useful.",
+  now,
 );
 
 insertTask.run(
