@@ -21,6 +21,8 @@ This repo starts with a simple split between `frontend` and `backend` so we can 
 - [docs/data-model.md](/Users/talha/Developer/Followup/docs/data-model.md)
 - [docs/progress-tracker.md](/Users/talha/Developer/Followup/docs/progress-tracker.md)
 - [docs/road-to-revenue.md](/Users/talha/Developer/Followup/docs/road-to-revenue.md)
+- [docs/revenue-progress-tracker.md](/Users/talha/Developer/Followup/docs/revenue-progress-tracker.md)
+- [docs/staging-deployment-guide.md](/Users/talha/Developer/Followup/docs/staging-deployment-guide.md)
 
 ## Repo Structure
 
