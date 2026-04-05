@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: followup-backend
+    env: docker
+    plan: starter
+    dockerfilePath: ./backend/Dockerfile
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "4000"
+
+  - type: web
+    name: followup-frontend
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+
+databases:
+  - name: followup-postgres
+    databaseName: followup
+    user: followup

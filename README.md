@@ -117,14 +117,18 @@ cp backend/.env.example backend/.env
 The repo now includes starter deployment-oriented config:
 
 - [backend/prisma/schema.postgres.prisma](/Users/talha/Developer/Followup/backend/prisma/schema.postgres.prisma) for production Postgres builds
+- [backend/prisma/seed.mjs](/Users/talha/Developer/Followup/backend/prisma/seed.mjs) for portable Prisma-based staging seed data
 - [backend/Dockerfile](/Users/talha/Developer/Followup/backend/Dockerfile) for containerized backend deploys
 - [frontend/vercel.json](/Users/talha/Developer/Followup/frontend/vercel.json) so SPA routes like `/oauth/google/callback` resolve correctly on Vercel
+- [render.yaml](/Users/talha/Developer/Followup/render.yaml) as a starter Render deployment template
+- [railway.json](/Users/talha/Developer/Followup/railway.json) as a starter Railway deployment template
 
 Useful production commands:
 
 ```bash
 npm --workspace backend run db:generate:prod
 npm --workspace backend run db:push:prod
+npm --workspace backend run db:seed:prod
 npm --workspace backend run build:prod
 ```
 

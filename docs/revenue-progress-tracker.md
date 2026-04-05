@@ -29,8 +29,8 @@
 
 - `not started` deploy frontend
 - `not started` deploy backend
-- `not started` connect hosted database
-- `not started` set staging env vars
+- `in progress` connect hosted database
+- `in progress` set staging env vars
 - `not started` test sign up, login, connect Gmail, sync, detect, draft, reminder
 - `not started` add basic error logging and uptime checks
 

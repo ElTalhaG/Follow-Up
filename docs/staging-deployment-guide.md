@@ -29,6 +29,7 @@ Then from the repo root, prepare the production client and push the schema:
 npm install
 npm --workspace backend run db:generate:prod
 npm --workspace backend run db:push:prod
+npm --workspace backend run db:seed:prod
 ```
 
 ## 2. Backend Environment
@@ -74,6 +75,9 @@ The repo includes:
 
 - [backend/Dockerfile](/Users/talha/Developer/Followup/backend/Dockerfile)
 - [backend/prisma/schema.postgres.prisma](/Users/talha/Developer/Followup/backend/prisma/schema.postgres.prisma)
+- [backend/prisma/seed.mjs](/Users/talha/Developer/Followup/backend/prisma/seed.mjs)
+- [render.yaml](/Users/talha/Developer/Followup/render.yaml)
+- [railway.json](/Users/talha/Developer/Followup/railway.json)
 
 Recommended deploy sequence:
 

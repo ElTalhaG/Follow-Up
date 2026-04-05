@@ -13,6 +13,8 @@
     "db:generate": "prisma generate",
     "db:generate:prod": "prisma generate --schema prisma/schema.postgres.prisma",
     "db:push:prod": "prisma db push --schema prisma/schema.postgres.prisma",
+    "db:seed": "node prisma/seed.mjs",
+    "db:seed:prod": "npm run db:generate:prod && node prisma/seed.mjs",
     "db:init": "node scripts/init-db.mjs",
     "db:reset": "node scripts/init-db.mjs --reset"
   },
