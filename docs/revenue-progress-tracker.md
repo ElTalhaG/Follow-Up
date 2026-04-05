@@ -11,7 +11,7 @@
 - `in progress` switch the production database to PostgreSQL
 - `done` keep SQLite only for local development if helpful
 - `done` define production env vars cleanly
-- `not started` confirm Prisma works against Postgres
+- `in progress` confirm Prisma works against Postgres
 - `in progress` prepare deployment configuration for frontend and backend
 - `in progress` verify secrets handling and environment separation
 - `done` update README with real setup instructions
@@ -89,6 +89,6 @@
 
 ## Next Best Move
 
-1. Provision a hosted Postgres database and validate the production Prisma schema.
+1. Provision a hosted Postgres database and run the production schema against it.
 2. Deploy staging frontend and backend with the new callback routing and backend runtime config.
 3. Connect a real Google OAuth app and test the hosted Gmail flow end to end.

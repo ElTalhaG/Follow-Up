@@ -1,10 +1,17 @@
 import cors from "cors";
 import express from "express";
 import { buildRouter, getErrorStatusCode } from "./api/router.js";
-import { buildCorsOptions, getPort, isProduction } from "./config/env.js";
+import {
+  buildCorsOptions,
+  getPort,
+  getRuntimeSummary,
+  isProduction,
+  validateRuntimeEnv,
+} from "./config/env.js";
 
 const app = express();
 const port = getPort();
+validateRuntimeEnv();
 
 if (isProduction()) {
   app.set("trust proxy", 1);
@@ -18,6 +25,7 @@ app.get("/health", (_request, response) => {
   response.json({
     ok: true,
     service: "followup-backend",
+    ...getRuntimeSummary(),
   });
 });
 
@@ -41,4 +49,5 @@ app.use(
 
 app.listen(port, () => {
   console.log(`Followup backend listening on port ${port}`);
+  console.log(getRuntimeSummary());
 });
