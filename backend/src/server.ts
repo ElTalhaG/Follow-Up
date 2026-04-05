@@ -8,6 +8,8 @@ import {
   isProduction,
   validateRuntimeEnv,
 } from "./config/env.js";
+import { logError, logInfo, requestLogger } from "./middleware/logging.js";
+import { rateLimit } from "./middleware/rate-limit.js";
 
 const app = express();
 const port = getPort();
@@ -18,6 +20,8 @@ if (isProduction()) {
 }
 
 app.use(cors(buildCorsOptions()));
+app.use(requestLogger);
+app.use(rateLimit);
 app.use(express.json());
 app.use("/api", buildRouter());
 
@@ -32,11 +36,17 @@ app.get("/health", (_request, response) => {
 app.use(
   (
     error: unknown,
-    _request: express.Request,
+    request: express.Request,
     response: express.Response,
     _next: express.NextFunction,
   ) => {
-    console.error(error);
+    logError("request_failed", {
+      method: request.method,
+      path: request.originalUrl,
+      statusCode: getErrorStatusCode(error),
+      ip: request.ip,
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
     response.status(getErrorStatusCode(error)).json({
       ok: false,
       error:
@@ -48,6 +58,8 @@ app.use(
 );
 
 app.listen(port, () => {
-  console.log(`Followup backend listening on port ${port}`);
-  console.log(getRuntimeSummary());
+  logInfo("backend_started", {
+    port,
+    ...getRuntimeSummary(),
+  });
 });

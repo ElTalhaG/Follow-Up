@@ -63,6 +63,18 @@ export function getRuntimeSummary() {
     databaseProvider: getDatabaseProvider(),
     gmailMode: getGmailMode(),
     hasCorsOrigin: Boolean(process.env.CORS_ORIGIN?.trim()),
+    rateLimitEnabled: getRateLimitConfig().enabled,
+  };
+}
+
+export function getRateLimitConfig() {
+  const maxRequests = Number(process.env.RATE_LIMIT_MAX_REQUESTS ?? 120);
+  const windowMs = Number(process.env.RATE_LIMIT_WINDOW_MS ?? 60_000);
+
+  return {
+    enabled: process.env.RATE_LIMIT_ENABLED !== "false",
+    maxRequests,
+    windowMs,
   };
 }
 

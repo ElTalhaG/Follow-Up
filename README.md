@@ -24,6 +24,9 @@ This repo starts with a simple split between `frontend` and `backend` so we can 
 - [docs/revenue-progress-tracker.md](/Users/talha/Developer/Followup/docs/revenue-progress-tracker.md)
 - [docs/staging-deployment-guide.md](/Users/talha/Developer/Followup/docs/staging-deployment-guide.md)
 - [docs/production-env-checklist.md](/Users/talha/Developer/Followup/docs/production-env-checklist.md)
+- [docs/privacy-policy.md](/Users/talha/Developer/Followup/docs/privacy-policy.md)
+- [docs/terms-of-service.md](/Users/talha/Developer/Followup/docs/terms-of-service.md)
+- [docs/data-handling.md](/Users/talha/Developer/Followup/docs/data-handling.md)
 
 ## Repo Structure
 

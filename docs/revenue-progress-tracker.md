@@ -36,13 +36,13 @@
 
 ## Phase R4: Trust And Operations
 
-- `not started` add privacy policy
-- `not started` add terms of service
-- `not started` clearly explain what email data is stored
-- `not started` add basic rate limiting
-- `not started` add structured backend logging
+- `done` add privacy policy
+- `done` add terms of service
+- `done` clearly explain what email data is stored
+- `done` add basic rate limiting
+- `done` add structured backend logging
 - `not started` add error monitoring
-- `not started` review token storage and secret handling
+- `in progress` review token storage and secret handling
 
 ## Phase R5: Beta Launch
 
@@ -81,7 +81,7 @@
 - `in progress` Phase R1
 - `in progress` Phase R2
 - `not started` Phase R3
-- `not started` Phase R4
+- `in progress` Phase R4
 - `not started` Phase R5
 - `not started` Phase R6
 - `not started` Phase R7
@@ -90,5 +90,5 @@
 ## Next Best Move
 
 1. Provision a hosted Postgres database and run the production schema against it.
-2. Deploy staging frontend and backend with the new callback routing and backend runtime config.
+2. Deploy staging frontend and backend with the new callback routing, rate limiting, and runtime config.
 3. Connect a real Google OAuth app and test the hosted Gmail flow end to end.
