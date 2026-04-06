@@ -81,6 +81,39 @@ body::before {
   max-width: 620px;
 }
 
+.hero-proof-grid,
+.pricing-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.hero-proof-grid {
+  margin-top: 24px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.hero-proof-card,
+.pricing-card {
+  padding: 16px 18px;
+  border-radius: 18px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.56);
+}
+
+.hero-proof-card strong,
+.pricing-card strong {
+  display: block;
+  margin-bottom: 6px;
+}
+
+.hero-proof-card p,
+.pricing-card p,
+.pricing-head p,
+.pricing-price span {
+  margin: 0;
+  color: var(--muted);
+}
+
 .panel-grid {
   display: grid;
   gap: 20px;
@@ -105,7 +138,8 @@ body::before {
 }
 
 .panel h2,
-.conversation-head h3 {
+.conversation-head h3,
+.pricing-head h3 {
   margin: 0;
 }
 
@@ -271,6 +305,29 @@ body::before {
 .status-card {
   display: grid;
   gap: 14px;
+}
+
+.pricing-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.pricing-card.featured {
+  background: rgba(203, 95, 47, 0.1);
+  border-color: rgba(203, 95, 47, 0.28);
+}
+
+.pricing-price {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.pricing-price strong {
+  margin: 0;
+  font-size: 2rem;
 }
 
 .status-strip,
@@ -465,12 +522,18 @@ body::before {
 
   .meta-row,
   .toolbar,
-  .toggle-row {
+  .toggle-row,
+  .pricing-head {
     align-items: flex-start;
     flex-direction: column;
   }
 
   .analytics-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-proof-grid,
+  .pricing-grid {
     grid-template-columns: 1fr;
   }
 

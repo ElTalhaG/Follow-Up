@@ -26,6 +26,47 @@ type WorkspaceData = {
   analytics: AnalyticsSummary;
 };
 
+const PRICING_PLANS = [
+  {
+    name: "Solo",
+    price: "$19",
+    cadence: "/month",
+    summary: "For freelancers who mainly need one inbox and a sharp daily follow-up list.",
+    points: [
+      "1 Gmail account",
+      "Unlimited follow-up scans",
+      "AI drafts in friendly, professional, and direct tones",
+      "Reminder queue and weekly value summary",
+    ],
+    highlight: false,
+  },
+  {
+    name: "Studio",
+    price: "$49",
+    cadence: "/month",
+    summary: "For tiny agencies managing multiple warm leads without a full CRM rollout.",
+    points: [
+      "Up to 3 shared inbox accounts",
+      "Priority follow-up views and lead notes",
+      "Draft history, reminders, and pipeline snapshots",
+      "Founding-user onboarding support",
+    ],
+    highlight: true,
+  },
+] as const;
+
+const ROI_BULLETS = [
+  "Find warm leads sitting unanswered for 24+ hours.",
+  "Draft the next reply in seconds instead of context-switching across threads.",
+  "Keep a lightweight pipeline without adopting a heavyweight CRM.",
+];
+
+const OUTREACH_CHANNELS = [
+  "Freelance designers and developers",
+  "Small marketing agencies",
+  "Consultants and recruiters",
+] as const;
+
 type ActivityState =
   | "idle"
   | "auth"
@@ -154,6 +195,7 @@ export function DashboardShell() {
   const hasConnectedInbox = accounts.length > 0;
   const hasSyncedData = conversations.length > 0;
   const hasDetectedWork = followUps.length > 0;
+  const ctaLabel = session ? "Run demo flow" : "Create account and run the demo";
   const onboardingSteps = [
     {
       label: "Create your account",
@@ -746,11 +788,25 @@ export function DashboardShell() {
         </p>
         <div className="hero-actions">
           <button className="primary-button" disabled={isBusy || !session} onClick={handleRunDemo}>
-            Run demo flow
+            {ctaLabel}
           </button>
           <p className="helper-copy">
             The fastest path: connect Gmail, sync recent threads, and surface your first missed follow-up.
           </p>
+        </div>
+        <div className="hero-proof-grid">
+          <div className="hero-proof-card">
+            <strong>For</strong>
+            <p>Freelancers and tiny agencies who live in Gmail and lose money on slow follow-up.</p>
+          </div>
+          <div className="hero-proof-card">
+            <strong>Core promise</strong>
+            <p>Catch missed leads, write the next reply faster, and keep momentum without a full CRM.</p>
+          </div>
+          <div className="hero-proof-card">
+            <strong>Expected result</strong>
+            <p>Surface one useful missed opportunity fast enough that the product pays for itself.</p>
+          </div>
         </div>
       </section>
 
@@ -982,6 +1038,14 @@ export function DashboardShell() {
           </div>
           <div className="workspace-stack">
             <div className="status-card">
+              <strong>Why freelancers pay for this</strong>
+              <ul className="feature-list">
+                {ROI_BULLETS.map((point) => (
+                  <li key={point}>{point}</li>
+                ))}
+              </ul>
+            </div>
+            <div className="status-card">
               <strong>Status</strong>
               <p>{statusMessage}</p>
               <div className="status-strip">
@@ -990,6 +1054,40 @@ export function DashboardShell() {
                 <span className={`mini-pill ${hasSyncedData ? "is-done" : ""}`}>Synced</span>
                 <span className={`mini-pill ${hasDetectedWork ? "is-done" : ""}`}>Flagged</span>
               </div>
+            </div>
+            <div className="status-card">
+              <strong>Starter pricing</strong>
+              <div className="pricing-grid">
+                {PRICING_PLANS.map((plan) => (
+                  <div className={`pricing-card ${plan.highlight ? "featured" : ""}`} key={plan.name}>
+                    <div className="pricing-head">
+                      <div>
+                        <h3>{plan.name}</h3>
+                        <p>{plan.summary}</p>
+                      </div>
+                      <span className="pill subtle">{plan.highlight ? "Best for first teams" : "Best for solo"}</span>
+                    </div>
+                    <p className="pricing-price">
+                      <strong>{plan.price}</strong>
+                      <span>{plan.cadence}</span>
+                    </p>
+                    <ul className="feature-list">
+                      {plan.points.map((point) => (
+                        <li key={point}>{point}</li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="status-card">
+              <strong>First buyers to target</strong>
+              <ul className="feature-list">
+                {OUTREACH_CHANNELS.map((channel) => (
+                  <li key={channel}>{channel}</li>
+                ))}
+              </ul>
+              <p>Sell the promise of missed-lead recovery before you add broad CRM features.</p>
             </div>
             <div className="status-card">
               <strong>Quick start</strong>

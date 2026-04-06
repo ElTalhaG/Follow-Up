@@ -55,15 +55,15 @@
 ## Phase R6: Monetization
 
 - `not started` integrate Stripe
-- `not started` create a simple pricing page
-- `not started` decide on one plan for solo users and one for tiny teams
-- `not started` add trial or founding-user pricing
+- `in progress` create a simple pricing page
+- `done` decide on one plan for solo users and one for tiny teams
+- `in progress` add trial or founding-user pricing
 - `not started` gate premium usage lightly if needed
 
 ## Phase R7: First Revenue Engine
 
-- `not started` write a simple landing page
-- `not started` show the core promise clearly
+- `in progress` write a simple landing page
+- `done` show the core promise clearly
 - `not started` create outreach scripts for freelancers and agencies
 - `not started` run direct outreach manually
 - `not started` add simple email capture or waitlist if needed
@@ -83,8 +83,8 @@
 - `not started` Phase R3
 - `in progress` Phase R4
 - `not started` Phase R5
-- `not started` Phase R6
-- `not started` Phase R7
+- `in progress` Phase R6
+- `in progress` Phase R7
 - `not started` Phase R8
 
 ## Next Best Move
@@ -92,3 +92,4 @@
 1. Provision a hosted Postgres database and run the production schema against it.
 2. Deploy staging frontend and backend with the new callback routing, rate limiting, and runtime config.
 3. Connect a real Google OAuth app and test the hosted Gmail flow end to end.
+4. Add Stripe checkout so the new pricing layer can become a real paid flow.

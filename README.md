@@ -22,6 +22,7 @@ This repo starts with a simple split between `frontend` and `backend` so we can 
 - [docs/progress-tracker.md](/Users/talha/Developer/Followup/docs/progress-tracker.md)
 - [docs/road-to-revenue.md](/Users/talha/Developer/Followup/docs/road-to-revenue.md)
 - [docs/revenue-progress-tracker.md](/Users/talha/Developer/Followup/docs/revenue-progress-tracker.md)
+- [docs/pricing-strategy.md](/Users/talha/Developer/Followup/docs/pricing-strategy.md)
 - [docs/staging-deployment-guide.md](/Users/talha/Developer/Followup/docs/staging-deployment-guide.md)
 - [docs/production-env-checklist.md](/Users/talha/Developer/Followup/docs/production-env-checklist.md)
 - [docs/privacy-policy.md](/Users/talha/Developer/Followup/docs/privacy-policy.md)
