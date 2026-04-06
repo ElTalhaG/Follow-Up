@@ -54,7 +54,7 @@
 
 ## Phase R6: Monetization
 
-- `not started` integrate Stripe
+- `in progress` integrate Stripe
 - `in progress` create a simple pricing page
 - `done` decide on one plan for solo users and one for tiny teams
 - `in progress` add trial or founding-user pricing

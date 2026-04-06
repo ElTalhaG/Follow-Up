@@ -27,6 +27,7 @@ import {
   listReminders,
   listTaskSummary,
 } from "../follow-up/reminders.js";
+import { createCheckoutLink, listBillingPlans } from "../billing/service.js";
 
 export function buildRouter() {
   const router = Router();
@@ -37,6 +38,21 @@ export function buildRouter() {
       version: "0.1.0",
       focus: "Detect unanswered Gmail leads and suggest follow-ups.",
     });
+  });
+
+  router.get("/billing/plans", (_request, response) => {
+    response.json(listBillingPlans());
+  });
+
+  router.post("/billing/checkout-link", (request, response, next) => {
+    try {
+      const planId = String(request.body.planId ?? "");
+      const checkout = createCheckoutLink(planId);
+
+      response.status(201).json(checkout);
+    } catch (error) {
+      next(error);
+    }
   });
 
   router.get("/follow-ups", async (request, response, next) => {

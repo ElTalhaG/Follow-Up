@@ -62,9 +62,14 @@ export function getRuntimeSummary() {
     environment: isProduction() ? "production" : "development",
     databaseProvider: getDatabaseProvider(),
     gmailMode: getGmailMode(),
+    billingMode: getStripeBillingMode(),
     hasCorsOrigin: Boolean(process.env.CORS_ORIGIN?.trim()),
     rateLimitEnabled: getRateLimitConfig().enabled,
   };
+}
+
+export function getStripeBillingMode() {
+  return process.env.STRIPE_PAYMENT_LINK_MODE === "live" ? "live" : "mock";
 }
 
 export function getRateLimitConfig() {

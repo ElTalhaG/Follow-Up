@@ -95,6 +95,17 @@ export type AnalyticsSummary = {
   }>;
 };
 
+export type BillingPlan = {
+  id: "solo" | "studio";
+  name: string;
+  priceMonthly: number;
+  currency: "USD";
+  ctaLabel: string;
+  summary: string;
+  seats: string;
+  features: string[];
+};
+
 async function request<T>(path: string, options: RequestInit = {}, token?: string) {
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...options,
@@ -259,6 +270,18 @@ export const api = {
         body: JSON.stringify({}),
       },
       token,
+    );
+  },
+  listBillingPlans() {
+    return request<{ mode: "mock" | "live"; trialDays: number; plans: BillingPlan[] }>("/billing/plans");
+  },
+  createCheckoutLink(planId: "solo" | "studio") {
+    return request<{ mode: "mock" | "live"; url: string; plan: BillingPlan }>(
+      "/billing/checkout-link",
+      {
+        method: "POST",
+        body: JSON.stringify({ planId }),
+      },
     );
   },
 };

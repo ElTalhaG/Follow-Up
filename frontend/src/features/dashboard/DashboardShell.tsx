@@ -3,6 +3,7 @@ import {
   api,
   type AnalyticsSummary,
   type AuthResponse,
+  type BillingPlan,
   type ConversationItem,
   type DraftRecord,
   type FollowUpItem,
@@ -66,7 +67,6 @@ const OUTREACH_CHANNELS = [
   "Small marketing agencies",
   "Consultants and recruiters",
 ] as const;
-
 type ActivityState =
   | "idle"
   | "auth"
@@ -80,7 +80,8 @@ type ActivityState =
   | "reminder"
   | "dismiss-reminder"
   | "notes"
-  | "demo";
+  | "demo"
+  | "checkout";
 
 function formatPriority(priority: FollowUpItem["priority"]) {
   return priority.charAt(0).toUpperCase() + priority.slice(1);
@@ -125,6 +126,8 @@ function getActivityLabel(activity: ActivityState) {
       return "Saving conversation notes";
     case "demo":
       return "Running the demo flow";
+    case "checkout":
+      return "Preparing checkout";
     default:
       return "Working";
   }
@@ -178,6 +181,8 @@ export function DashboardShell() {
     done: 0,
     canceled: 0,
   });
+  const [billingPlans, setBillingPlans] = useState<BillingPlan[]>([]);
+  const [trialDays, setTrialDays] = useState(14);
   const [analytics, setAnalytics] = useState<AnalyticsSummary | null>(null);
   const [draftHistory, setDraftHistory] = useState<DraftsByFollowUp>({});
   const [draftEditors, setDraftEditors] = useState<DraftEditors>({});
@@ -232,6 +237,29 @@ export function DashboardShell() {
     } catch {
       window.localStorage.removeItem("followup-session");
     }
+  }, []);
+
+  useEffect(() => {
+    void (async () => {
+      try {
+        const billing = await api.listBillingPlans();
+        setBillingPlans(billing.plans);
+        setTrialDays(billing.trialDays);
+      } catch {
+        setBillingPlans(
+          PRICING_PLANS.map((plan) => ({
+            id: plan.name.toLowerCase() as "solo" | "studio",
+            name: plan.name,
+            priceMonthly: Number(plan.price.replace("$", "")),
+            currency: "USD",
+            ctaLabel: plan.highlight ? "Start studio trial" : "Start solo trial",
+            summary: plan.summary,
+            seats: plan.highlight ? "Up to 3 inboxes" : "1 inbox",
+            features: [...plan.points],
+          })),
+        );
+      }
+    })();
   }, []);
 
   useEffect(() => {
@@ -770,6 +798,26 @@ export function DashboardShell() {
     }
   }
 
+  async function handleCheckout(planId: "solo" | "studio") {
+    setIsBusy(true);
+    setActivity("checkout");
+
+    try {
+      const checkout = await api.createCheckoutLink(planId);
+      setStatusMessage(
+        checkout.mode === "live"
+          ? `Opening ${checkout.plan.name} checkout in a new tab.`
+          : `Stripe payment link not configured yet, so ${checkout.plan.name} is using a placeholder checkout URL.`,
+      );
+      window.open(checkout.url, "_blank", "noopener,noreferrer");
+    } catch (error) {
+      setStatusMessage(error instanceof Error ? error.message : "Failed to prepare checkout.");
+    } finally {
+      setIsBusy(false);
+      setActivity("idle");
+    }
+  }
+
   return (
     <main className="app-shell">
       {isBusy ? (
@@ -1058,24 +1106,42 @@ export function DashboardShell() {
             <div className="status-card">
               <strong>Starter pricing</strong>
               <div className="pricing-grid">
-                {PRICING_PLANS.map((plan) => (
-                  <div className={`pricing-card ${plan.highlight ? "featured" : ""}`} key={plan.name}>
+                {(billingPlans.length ? billingPlans : PRICING_PLANS.map((plan) => ({
+                  id: plan.name.toLowerCase() as "solo" | "studio",
+                  name: plan.name,
+                  priceMonthly: Number(plan.price.replace("$", "")),
+                  currency: "USD" as const,
+                  ctaLabel: plan.highlight ? "Start studio trial" : "Start solo trial",
+                  summary: plan.summary,
+                  seats: plan.highlight ? "Up to 3 inboxes" : "1 inbox",
+                  features: [...plan.points],
+                }))).map((plan) => (
+                  <div className={`pricing-card ${plan.id === "studio" ? "featured" : ""}`} key={plan.id}>
                     <div className="pricing-head">
                       <div>
                         <h3>{plan.name}</h3>
                         <p>{plan.summary}</p>
                       </div>
-                      <span className="pill subtle">{plan.highlight ? "Best for first teams" : "Best for solo"}</span>
+                      <span className="pill subtle">{plan.id === "studio" ? "Best for first teams" : "Best for solo"}</span>
                     </div>
                     <p className="pricing-price">
-                      <strong>{plan.price}</strong>
-                      <span>{plan.cadence}</span>
+                      <strong>{`$${plan.priceMonthly}`}</strong>
+                      <span>/month</span>
                     </p>
+                    <p className="helper-copy">{trialDays}-day free trial</p>
                     <ul className="feature-list">
-                      {plan.points.map((point) => (
+                      {plan.features.map((point) => (
                         <li key={point}>{point}</li>
                       ))}
                     </ul>
+                    <button
+                      className="primary-button"
+                      disabled={isBusy}
+                      onClick={() => handleCheckout(plan.id)}
+                      type="button"
+                    >
+                      {plan.ctaLabel}
+                    </button>
                   </div>
                 ))}
               </div>

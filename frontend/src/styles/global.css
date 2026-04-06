@@ -330,6 +330,10 @@ body::before {
   font-size: 2rem;
 }
 
+.pricing-card .primary-button {
+  width: fit-content;
+}
+
 .status-strip,
 .checklist {
   display: grid;
