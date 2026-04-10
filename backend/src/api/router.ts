@@ -28,6 +28,7 @@ import {
   listTaskSummary,
 } from "../follow-up/reminders.js";
 import { createCheckoutLink, listBillingPlans } from "../billing/service.js";
+import { createWaitlistEntry } from "../launch/waitlist.js";
 
 export function buildRouter() {
   const router = Router();
@@ -50,6 +51,22 @@ export function buildRouter() {
       const checkout = createCheckoutLink(planId);
 
       response.status(201).json(checkout);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  router.post("/launch/waitlist", async (request, response, next) => {
+    try {
+      const result = await createWaitlistEntry({
+        email: String(request.body.email ?? ""),
+        fullName: request.body.fullName === undefined ? undefined : String(request.body.fullName),
+        segment: request.body.segment === undefined ? undefined : String(request.body.segment),
+        notes: request.body.notes === undefined ? undefined : String(request.body.notes),
+        source: request.body.source === undefined ? undefined : String(request.body.source),
+      });
+
+      response.status(result.alreadyJoined ? 200 : 201).json(result);
     } catch (error) {
       next(error);
     }

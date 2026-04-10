@@ -106,6 +106,16 @@ export type BillingPlan = {
   features: string[];
 };
 
+export type WaitlistEntry = {
+  id: string;
+  email: string;
+  fullName: string | null;
+  segment: string | null;
+  notes: string | null;
+  source: string;
+  createdAt: string;
+};
+
 async function request<T>(path: string, options: RequestInit = {}, token?: string) {
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...options,
@@ -281,6 +291,21 @@ export const api = {
       {
         method: "POST",
         body: JSON.stringify({ planId }),
+      },
+    );
+  },
+  joinWaitlist(input: {
+    email: string;
+    fullName?: string;
+    segment?: string;
+    notes?: string;
+    source?: string;
+  }) {
+    return request<{ entry: WaitlistEntry; alreadyJoined: boolean }>(
+      "/launch/waitlist",
+      {
+        method: "POST",
+        body: JSON.stringify(input),
       },
     );
   },

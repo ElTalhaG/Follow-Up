@@ -24,6 +24,7 @@ This repo starts with a simple split between `frontend` and `backend` so we can 
 - [docs/revenue-progress-tracker.md](/Users/talha/Developer/Followup/docs/revenue-progress-tracker.md)
 - [docs/pricing-strategy.md](/Users/talha/Developer/Followup/docs/pricing-strategy.md)
 - [docs/stripe-payment-links.md](/Users/talha/Developer/Followup/docs/stripe-payment-links.md)
+- [docs/founding-user-playbook.md](/Users/talha/Developer/Followup/docs/founding-user-playbook.md)
 - [docs/staging-deployment-guide.md](/Users/talha/Developer/Followup/docs/staging-deployment-guide.md)
 - [docs/production-env-checklist.md](/Users/talha/Developer/Followup/docs/production-env-checklist.md)
 - [docs/privacy-policy.md](/Users/talha/Developer/Followup/docs/privacy-policy.md)

@@ -19,6 +19,12 @@ type AuthMode = "login" | "register";
 type DraftsByFollowUp = Record<string, DraftRecord[]>;
 type DraftEditors = Record<string, string>;
 type ConversationNotes = Record<string, string>;
+type WaitlistForm = {
+  fullName: string;
+  email: string;
+  segment: string;
+  notes: string;
+};
 type WorkspaceData = {
   followUps: FollowUpItem[];
   conversations: ConversationItem[];
@@ -81,7 +87,8 @@ type ActivityState =
   | "dismiss-reminder"
   | "notes"
   | "demo"
-  | "checkout";
+  | "checkout"
+  | "waitlist";
 
 function formatPriority(priority: FollowUpItem["priority"]) {
   return priority.charAt(0).toUpperCase() + priority.slice(1);
@@ -128,6 +135,8 @@ function getActivityLabel(activity: ActivityState) {
       return "Running the demo flow";
     case "checkout":
       return "Preparing checkout";
+    case "waitlist":
+      return "Saving your early-access request";
     default:
       return "Working";
   }
@@ -187,6 +196,12 @@ export function DashboardShell() {
   const [draftHistory, setDraftHistory] = useState<DraftsByFollowUp>({});
   const [draftEditors, setDraftEditors] = useState<DraftEditors>({});
   const [conversationNotes, setConversationNotes] = useState<ConversationNotes>({});
+  const [waitlistForm, setWaitlistForm] = useState<WaitlistForm>({
+    fullName: "",
+    email: "",
+    segment: "freelancer",
+    notes: "",
+  });
   const [statusMessage, setStatusMessage] = useState("Sign in to unlock Gmail sync and follow-up actions.");
   const [isBusy, setIsBusy] = useState(false);
   const [activity, setActivity] = useState<ActivityState>("idle");
@@ -818,6 +833,33 @@ export function DashboardShell() {
     }
   }
 
+  async function handleJoinWaitlist(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setIsBusy(true);
+    setActivity("waitlist");
+
+    try {
+      const result = await api.joinWaitlist({
+        ...waitlistForm,
+        source: "landing-page",
+      });
+      setStatusMessage(
+        result.alreadyJoined
+          ? `${result.entry.email} is already on the founding-user list.`
+          : `Added ${result.entry.email} to the founding-user list.`,
+      );
+      setWaitlistForm((current) => ({
+        ...current,
+        notes: "",
+      }));
+    } catch (error) {
+      setStatusMessage(error instanceof Error ? error.message : "Failed to join the waitlist.");
+    } finally {
+      setIsBusy(false);
+      setActivity("idle");
+    }
+  }
+
   return (
     <main className="app-shell">
       {isBusy ? (
@@ -1145,6 +1187,55 @@ export function DashboardShell() {
                   </div>
                 ))}
               </div>
+            </div>
+            <div className="status-card">
+              <strong>Founding-user access</strong>
+              <p>Join the early-access list to get staging access, founding pricing, and hands-on onboarding.</p>
+              <form className="auth-form" onSubmit={handleJoinWaitlist}>
+                <label className="field">
+                  <span>Full name</span>
+                  <input
+                    value={waitlistForm.fullName}
+                    onChange={(event) =>
+                      setWaitlistForm((current) => ({ ...current, fullName: event.target.value }))
+                    }
+                    placeholder="Alex Mercer"
+                  />
+                </label>
+                <label className="field">
+                  <span>Email</span>
+                  <input
+                    value={waitlistForm.email}
+                    onChange={(event) =>
+                      setWaitlistForm((current) => ({ ...current, email: event.target.value }))
+                    }
+                    placeholder="founder@example.com"
+                  />
+                </label>
+                <label className="field">
+                  <span>Best fit</span>
+                  <input
+                    value={waitlistForm.segment}
+                    onChange={(event) =>
+                      setWaitlistForm((current) => ({ ...current, segment: event.target.value }))
+                    }
+                    placeholder="freelancer, agency, consultant"
+                  />
+                </label>
+                <label className="field">
+                  <span>What would you use it for?</span>
+                  <input
+                    value={waitlistForm.notes}
+                    onChange={(event) =>
+                      setWaitlistForm((current) => ({ ...current, notes: event.target.value }))
+                    }
+                    placeholder="I lose warm leads when my inbox gets busy."
+                  />
+                </label>
+                <button className="primary-button" disabled={isBusy} type="submit">
+                  Join founding-user waitlist
+                </button>
+              </form>
             </div>
             <div className="status-card">
               <strong>First buyers to target</strong>

@@ -48,6 +48,16 @@ model User {
   accounts     Account[]
 }
 
+model WaitlistEntry {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  fullName  String?
+  segment   String?
+  notes     String?
+  source    String
+  createdAt DateTime @default(now())
+}
+
 model Account {
   id                String         @id @default(cuid())
   userId            String

@@ -66,7 +66,7 @@
 - `done` show the core promise clearly
 - `not started` create outreach scripts for freelancers and agencies
 - `not started` run direct outreach manually
-- `not started` add simple email capture or waitlist if needed
+- `in progress` add simple email capture or waitlist if needed
 - `not started` track activation and paid conversion
 
 ## Phase R8: Expand The Wedge

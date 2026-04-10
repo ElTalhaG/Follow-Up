@@ -5,6 +5,7 @@ const prisma = new PrismaClient();
 async function main() {
   const now = new Date("2026-03-27T10:00:00.000Z");
 
+  await prisma.waitlistEntry.deleteMany();
   await prisma.draft.deleteMany();
   await prisma.reminder.deleteMany();
   await prisma.task.deleteMany();
@@ -215,6 +216,18 @@ async function main() {
           },
         },
       },
+    },
+  });
+
+  await prisma.waitlistEntry.create({
+    data: {
+      id: "waitlist_1",
+      email: "prospect@example.com",
+      fullName: "Jamie Rivera",
+      segment: "freelancer",
+      notes: "Interested in a founding-user trial as soon as Gmail staging is live.",
+      source: "landing-page",
+      createdAt: now,
     },
   });
 }

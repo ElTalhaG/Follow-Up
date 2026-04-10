@@ -27,6 +27,7 @@ db.exec(`
   DROP TABLE IF EXISTS "Account";
   DROP TABLE IF EXISTS "User";
   DROP TABLE IF EXISTS "Draft";
+  DROP TABLE IF EXISTS "WaitlistEntry";
 
   CREATE TABLE IF NOT EXISTS "User" (
     "id" TEXT NOT NULL PRIMARY KEY,
@@ -35,6 +36,16 @@ db.exec(`
     "fullName" TEXT NOT NULL,
     "createdAt" DATETIME NOT NULL,
     "updatedAt" DATETIME NOT NULL
+  );
+
+  CREATE TABLE IF NOT EXISTS "WaitlistEntry" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "email" TEXT NOT NULL UNIQUE,
+    "fullName" TEXT,
+    "segment" TEXT,
+    "notes" TEXT,
+    "source" TEXT NOT NULL,
+    "createdAt" DATETIME NOT NULL
   );
 
   CREATE TABLE IF NOT EXISTS "Account" (
@@ -137,6 +148,11 @@ const insertUser = db.prepare(`
   VALUES (?, ?, ?, ?, ?, ?)
 `);
 
+const insertWaitlistEntry = db.prepare(`
+  INSERT INTO "WaitlistEntry" ("id", "email", "fullName", "segment", "notes", "source", "createdAt")
+  VALUES (?, ?, ?, ?, ?, ?, ?)
+`);
+
 const insertAccount = db.prepare(`
   INSERT INTO "Account" (
     "id", "userId", "provider", "providerAccountId", "emailAddress", "accessScope",
@@ -185,6 +201,16 @@ insertUser.run(
   "seed_password_hash",
   "Alex Mercer",
   now,
+  now,
+);
+
+insertWaitlistEntry.run(
+  "waitlist_1",
+  "prospect@example.com",
+  "Jamie Rivera",
+  "freelancer",
+  "Interested in a founding-user trial as soon as Gmail staging is live.",
+  "landing-page",
   now,
 );
 
