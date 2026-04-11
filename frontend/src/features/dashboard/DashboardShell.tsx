@@ -8,6 +8,7 @@ import {
   type DraftRecord,
   type FollowUpItem,
   type GmailAccount,
+  type LaunchMetrics,
   type ReminderItem,
   type TaskSummary,
 } from "../../lib/api";
@@ -193,6 +194,7 @@ export function DashboardShell() {
   const [billingPlans, setBillingPlans] = useState<BillingPlan[]>([]);
   const [trialDays, setTrialDays] = useState(14);
   const [analytics, setAnalytics] = useState<AnalyticsSummary | null>(null);
+  const [launchMetrics, setLaunchMetrics] = useState<LaunchMetrics | null>(null);
   const [draftHistory, setDraftHistory] = useState<DraftsByFollowUp>({});
   const [draftEditors, setDraftEditors] = useState<DraftEditors>({});
   const [conversationNotes, setConversationNotes] = useState<ConversationNotes>({});
@@ -273,6 +275,14 @@ export function DashboardShell() {
             features: [...plan.points],
           })),
         );
+      }
+    })();
+
+    void (async () => {
+      try {
+        setLaunchMetrics(await api.getLaunchMetrics());
+      } catch {
+        setLaunchMetrics(null);
       }
     })();
   }, []);
@@ -452,6 +462,7 @@ export function DashboardShell() {
           ? "Account created. Connect Gmail to start syncing conversations."
           : "Welcome back. Your dashboard is loading.",
       );
+      setLaunchMetrics(await api.getLaunchMetrics());
     } catch (error) {
       setStatusMessage(error instanceof Error ? error.message : "Authentication failed.");
     } finally {
@@ -824,6 +835,7 @@ export function DashboardShell() {
           ? `Opening ${checkout.plan.name} checkout in a new tab.`
           : `Stripe payment link not configured yet, so ${checkout.plan.name} is using a placeholder checkout URL.`,
       );
+      setLaunchMetrics(await api.getLaunchMetrics());
       window.open(checkout.url, "_blank", "noopener,noreferrer");
     } catch (error) {
       setStatusMessage(error instanceof Error ? error.message : "Failed to prepare checkout.");
@@ -848,6 +860,7 @@ export function DashboardShell() {
           ? `${result.entry.email} is already on the founding-user list.`
           : `Added ${result.entry.email} to the founding-user list.`,
       );
+      setLaunchMetrics(await api.getLaunchMetrics());
       setWaitlistForm((current) => ({
         ...current,
         notes: "",
@@ -1236,6 +1249,39 @@ export function DashboardShell() {
                   Join founding-user waitlist
                 </button>
               </form>
+            </div>
+            <div className="status-card">
+              <strong>Launch funnel</strong>
+              {!launchMetrics ? (
+                <p>Launch metrics will appear here once the tracking endpoints are available.</p>
+              ) : (
+                <div className="analytics-stack">
+                  <div className="analytics-grid">
+                    <div className="analytics-stat">
+                      <strong>{launchMetrics.totals.signups}</strong>
+                      <span>Signups</span>
+                    </div>
+                    <div className="analytics-stat">
+                      <strong>{launchMetrics.totals.waitlistJoins}</strong>
+                      <span>Waitlist joins</span>
+                    </div>
+                    <div className="analytics-stat">
+                      <strong>{launchMetrics.totals.checkoutClicks}</strong>
+                      <span>Checkout clicks</span>
+                    </div>
+                  </div>
+                  <div className="history-list">
+                    {launchMetrics.recentEvents.slice(0, 4).map((event) => (
+                      <div className="history-item" key={event.id}>
+                        <strong>{event.eventType.replace(/_/g, " ")}</strong>
+                        <p>
+                          {event.email ?? event.planId ?? "anonymous"} · {event.source} · {formatDate(event.createdAt)}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
             <div className="status-card">
               <strong>First buyers to target</strong>

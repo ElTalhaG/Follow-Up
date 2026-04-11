@@ -116,6 +116,23 @@ export type WaitlistEntry = {
   createdAt: string;
 };
 
+export type LaunchMetrics = {
+  totals: {
+    signups: number;
+    waitlistJoins: number;
+    checkoutClicks: number;
+  };
+  recentEvents: Array<{
+    id: string;
+    eventType: string;
+    email: string | null;
+    userId: string | null;
+    planId: string | null;
+    source: string;
+    createdAt: string;
+  }>;
+};
+
 async function request<T>(path: string, options: RequestInit = {}, token?: string) {
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...options,
@@ -308,5 +325,8 @@ export const api = {
         body: JSON.stringify(input),
       },
     );
+  },
+  getLaunchMetrics() {
+    return request<LaunchMetrics>("/launch/metrics");
   },
 };

@@ -1,5 +1,6 @@
 import { prisma } from "../database/prisma.js";
 import { AuthError } from "../auth/service.js";
+import { trackLaunchEvent } from "./metrics.js";
 
 type CreateWaitlistEntryInput = {
   email: string;
@@ -55,6 +56,12 @@ export async function createWaitlistEntry(input: CreateWaitlistEntryInput) {
       notes,
       source,
     },
+  });
+
+  await trackLaunchEvent({
+    eventType: "waitlist_joined",
+    email: entry.email,
+    source,
   });
 
   return {

@@ -5,6 +5,7 @@ const prisma = new PrismaClient();
 async function main() {
   const now = new Date("2026-03-27T10:00:00.000Z");
 
+  await prisma.launchEvent.deleteMany();
   await prisma.waitlistEntry.deleteMany();
   await prisma.draft.deleteMany();
   await prisma.reminder.deleteMany();
@@ -226,6 +227,16 @@ async function main() {
       fullName: "Jamie Rivera",
       segment: "freelancer",
       notes: "Interested in a founding-user trial as soon as Gmail staging is live.",
+      source: "landing-page",
+      createdAt: now,
+    },
+  });
+
+  await prisma.launchEvent.create({
+    data: {
+      id: "launch_event_1",
+      eventType: "waitlist_joined",
+      email: "prospect@example.com",
       source: "landing-page",
       createdAt: now,
     },

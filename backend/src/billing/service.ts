@@ -1,4 +1,5 @@
 import { AuthError } from "../auth/service.js";
+import { trackLaunchEvent } from "../launch/metrics.js";
 
 export type BillingPlanId = "solo" | "studio";
 
@@ -66,7 +67,7 @@ export function listBillingPlans() {
   };
 }
 
-export function createCheckoutLink(planId: string) {
+export async function createCheckoutLink(planId: string) {
   const normalized = String(planId).toLowerCase() as BillingPlanId;
   const plan = BILLING_PLANS.find((item) => item.id === normalized);
 
@@ -75,6 +76,12 @@ export function createCheckoutLink(planId: string) {
   }
 
   const link = getPlanPaymentLink(plan.id);
+
+  await trackLaunchEvent({
+    eventType: "checkout_clicked",
+    planId: plan.id,
+    source: "pricing-card",
+  });
 
   if (link) {
     return {

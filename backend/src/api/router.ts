@@ -28,6 +28,7 @@ import {
   listTaskSummary,
 } from "../follow-up/reminders.js";
 import { createCheckoutLink, listBillingPlans } from "../billing/service.js";
+import { getLaunchMetrics } from "../launch/metrics.js";
 import { createWaitlistEntry } from "../launch/waitlist.js";
 
 export function buildRouter() {
@@ -45,10 +46,10 @@ export function buildRouter() {
     response.json(listBillingPlans());
   });
 
-  router.post("/billing/checkout-link", (request, response, next) => {
+  router.post("/billing/checkout-link", async (request, response, next) => {
     try {
       const planId = String(request.body.planId ?? "");
-      const checkout = createCheckoutLink(planId);
+      const checkout = await createCheckoutLink(planId);
 
       response.status(201).json(checkout);
     } catch (error) {
@@ -67,6 +68,14 @@ export function buildRouter() {
       });
 
       response.status(result.alreadyJoined ? 200 : 201).json(result);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  router.get("/launch/metrics", async (_request, response, next) => {
+    try {
+      response.json(await getLaunchMetrics());
     } catch (error) {
       next(error);
     }

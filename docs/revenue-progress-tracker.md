@@ -67,7 +67,7 @@
 - `not started` create outreach scripts for freelancers and agencies
 - `not started` run direct outreach manually
 - `in progress` add simple email capture or waitlist if needed
-- `not started` track activation and paid conversion
+- `in progress` track activation and paid conversion
 
 ## Phase R8: Expand The Wedge
 

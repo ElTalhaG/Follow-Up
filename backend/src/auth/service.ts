@@ -1,4 +1,5 @@
 import { prisma } from "../database/prisma.js";
+import { trackLaunchEvent } from "../launch/metrics.js";
 import { hashPassword, verifyPassword } from "./password.js";
 import { createAuthToken, verifyAuthToken } from "./token.js";
 
@@ -69,6 +70,13 @@ export async function registerUser(input: AuthInput) {
       passwordHash,
       fullName,
     },
+  });
+
+  await trackLaunchEvent({
+    eventType: "signup_completed",
+    email: user.email,
+    userId: user.id,
+    source: "auth-register",
   });
 
   return {

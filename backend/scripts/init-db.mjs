@@ -28,6 +28,7 @@ db.exec(`
   DROP TABLE IF EXISTS "User";
   DROP TABLE IF EXISTS "Draft";
   DROP TABLE IF EXISTS "WaitlistEntry";
+  DROP TABLE IF EXISTS "LaunchEvent";
 
   CREATE TABLE IF NOT EXISTS "User" (
     "id" TEXT NOT NULL PRIMARY KEY,
@@ -44,6 +45,16 @@ db.exec(`
     "fullName" TEXT,
     "segment" TEXT,
     "notes" TEXT,
+    "source" TEXT NOT NULL,
+    "createdAt" DATETIME NOT NULL
+  );
+
+  CREATE TABLE IF NOT EXISTS "LaunchEvent" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "eventType" TEXT NOT NULL,
+    "email" TEXT,
+    "userId" TEXT,
+    "planId" TEXT,
     "source" TEXT NOT NULL,
     "createdAt" DATETIME NOT NULL
   );
@@ -153,6 +164,11 @@ const insertWaitlistEntry = db.prepare(`
   VALUES (?, ?, ?, ?, ?, ?, ?)
 `);
 
+const insertLaunchEvent = db.prepare(`
+  INSERT INTO "LaunchEvent" ("id", "eventType", "email", "userId", "planId", "source", "createdAt")
+  VALUES (?, ?, ?, ?, ?, ?, ?)
+`);
+
 const insertAccount = db.prepare(`
   INSERT INTO "Account" (
     "id", "userId", "provider", "providerAccountId", "emailAddress", "accessScope",
@@ -210,6 +226,16 @@ insertWaitlistEntry.run(
   "Jamie Rivera",
   "freelancer",
   "Interested in a founding-user trial as soon as Gmail staging is live.",
+  "landing-page",
+  now,
+);
+
+insertLaunchEvent.run(
+  "launch_event_1",
+  "waitlist_joined",
+  "prospect@example.com",
+  null,
+  null,
   "landing-page",
   now,
 );

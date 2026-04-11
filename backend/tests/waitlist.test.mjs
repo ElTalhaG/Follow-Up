@@ -28,4 +28,10 @@ test("waitlist entries can be created and deduplicated by email", async () => {
 
   assert.equal(second.alreadyJoined, true);
   assert.equal(second.entry.email, "launch@example.com");
+
+  const waitlistEvents = await prisma.launchEvent.count({
+    where: { eventType: "waitlist_joined", email: "launch@example.com" },
+  });
+
+  assert.equal(waitlistEvents, 1);
 });
