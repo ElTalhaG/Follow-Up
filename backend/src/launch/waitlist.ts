@@ -10,6 +10,26 @@ type CreateWaitlistEntryInput = {
   source?: string;
 };
 
+function serializeWaitlistEntry(entry: {
+  id: string;
+  email: string;
+  fullName: string | null;
+  segment: string | null;
+  notes: string | null;
+  source: string;
+  createdAt: Date;
+}) {
+  return {
+    id: entry.id,
+    email: entry.email,
+    fullName: entry.fullName,
+    segment: entry.segment,
+    notes: entry.notes,
+    source: entry.source,
+    createdAt: entry.createdAt.toISOString(),
+  };
+}
+
 function normalizeEmail(value: string) {
   return value.trim().toLowerCase();
 }
@@ -35,15 +55,7 @@ export async function createWaitlistEntry(input: CreateWaitlistEntryInput) {
 
   if (existing) {
     return {
-      entry: {
-        id: existing.id,
-        email: existing.email,
-        fullName: existing.fullName,
-        segment: existing.segment,
-        notes: existing.notes,
-        source: existing.source,
-        createdAt: existing.createdAt.toISOString(),
-      },
+      entry: serializeWaitlistEntry(existing),
       alreadyJoined: true,
     };
   }
@@ -65,15 +77,17 @@ export async function createWaitlistEntry(input: CreateWaitlistEntryInput) {
   });
 
   return {
-    entry: {
-      id: entry.id,
-      email: entry.email,
-      fullName: entry.fullName,
-      segment: entry.segment,
-      notes: entry.notes,
-      source: entry.source,
-      createdAt: entry.createdAt.toISOString(),
-    },
+    entry: serializeWaitlistEntry(entry),
     alreadyJoined: false,
   };
+}
+
+export async function listWaitlistEntries(limit = 10) {
+  const safeLimit = Math.min(Math.max(Math.trunc(limit) || 10, 1), 50);
+  const items = await prisma.waitlistEntry.findMany({
+    orderBy: { createdAt: "desc" },
+    take: safeLimit,
+  });
+
+  return items.map(serializeWaitlistEntry);
 }

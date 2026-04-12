@@ -48,7 +48,7 @@
 
 - `not started` onboard 5 to 10 real users manually
 - `not started` use one niche first
-- `not started` watch real usage closely
+- `in progress` watch real usage closely
 - `not started` collect every friction point in setup and activation
 - `not started` improve onboarding based on actual user confusion
 
@@ -64,7 +64,7 @@
 
 - `in progress` write a simple landing page
 - `done` show the core promise clearly
-- `not started` create outreach scripts for freelancers and agencies
+- `done` create outreach scripts for freelancers and agencies
 - `not started` run direct outreach manually
 - `in progress` add simple email capture or waitlist if needed
 - `in progress` track activation and paid conversion

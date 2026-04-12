@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { createWaitlistEntry } from "../dist/launch/waitlist.js";
+import { createWaitlistEntry, listWaitlistEntries } from "../dist/launch/waitlist.js";
 import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
@@ -34,4 +34,32 @@ test("waitlist entries can be created and deduplicated by email", async () => {
   });
 
   assert.equal(waitlistEvents, 1);
+});
+
+test("waitlist entries can be listed for founder queue review", async () => {
+  await prisma.waitlistEntry.deleteMany({
+    where: {
+      email: {
+        in: ["queue-a@example.com", "queue-b@example.com"],
+      },
+    },
+  });
+
+  await createWaitlistEntry({
+    email: "queue-a@example.com",
+    fullName: "Queue A",
+    segment: "freelancer",
+    source: "manual-outreach",
+  });
+  await createWaitlistEntry({
+    email: "queue-b@example.com",
+    fullName: "Queue B",
+    segment: "agency",
+    source: "manual-outreach",
+  });
+
+  const items = await listWaitlistEntries(5);
+
+  assert.ok(items.some((item) => item.email === "queue-a@example.com"));
+  assert.ok(items.some((item) => item.email === "queue-b@example.com"));
 });

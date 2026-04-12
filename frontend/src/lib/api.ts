@@ -326,6 +326,9 @@ export const api = {
       },
     );
   },
+  listWaitlistEntries(limit = 8) {
+    return request<{ items: WaitlistEntry[] }>(`/launch/waitlist?limit=${limit}`);
+  },
   getLaunchMetrics() {
     return request<LaunchMetrics>("/launch/metrics");
   },

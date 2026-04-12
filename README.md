@@ -26,6 +26,7 @@ This repo starts with a simple split between `frontend` and `backend` so we can 
 - [docs/stripe-payment-links.md](/Users/talha/Developer/Followup/docs/stripe-payment-links.md)
 - [docs/founding-user-playbook.md](/Users/talha/Developer/Followup/docs/founding-user-playbook.md)
 - [docs/launch-metrics.md](/Users/talha/Developer/Followup/docs/launch-metrics.md)
+- [docs/outreach-scripts.md](/Users/talha/Developer/Followup/docs/outreach-scripts.md)
 - [docs/staging-deployment-guide.md](/Users/talha/Developer/Followup/docs/staging-deployment-guide.md)
 - [docs/production-env-checklist.md](/Users/talha/Developer/Followup/docs/production-env-checklist.md)
 - [docs/privacy-policy.md](/Users/talha/Developer/Followup/docs/privacy-policy.md)

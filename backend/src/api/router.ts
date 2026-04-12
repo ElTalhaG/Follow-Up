@@ -29,7 +29,7 @@ import {
 } from "../follow-up/reminders.js";
 import { createCheckoutLink, listBillingPlans } from "../billing/service.js";
 import { getLaunchMetrics } from "../launch/metrics.js";
-import { createWaitlistEntry } from "../launch/waitlist.js";
+import { createWaitlistEntry, listWaitlistEntries } from "../launch/waitlist.js";
 
 export function buildRouter() {
   const router = Router();
@@ -68,6 +68,16 @@ export function buildRouter() {
       });
 
       response.status(result.alreadyJoined ? 200 : 201).json(result);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  router.get("/launch/waitlist", async (request, response, next) => {
+    try {
+      const limit = Number(request.query.limit ?? 8);
+      const items = await listWaitlistEntries(limit);
+      response.json({ items });
     } catch (error) {
       next(error);
     }

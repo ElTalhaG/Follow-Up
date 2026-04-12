@@ -11,6 +11,7 @@ import {
   type LaunchMetrics,
   type ReminderItem,
   type TaskSummary,
+  type WaitlistEntry,
 } from "../../lib/api";
 
 const DEFAULT_SNOOZE_DATE = "2026-04-03T09:00";
@@ -195,6 +196,7 @@ export function DashboardShell() {
   const [trialDays, setTrialDays] = useState(14);
   const [analytics, setAnalytics] = useState<AnalyticsSummary | null>(null);
   const [launchMetrics, setLaunchMetrics] = useState<LaunchMetrics | null>(null);
+  const [waitlistEntries, setWaitlistEntries] = useState<WaitlistEntry[]>([]);
   const [draftHistory, setDraftHistory] = useState<DraftsByFollowUp>({});
   const [draftEditors, setDraftEditors] = useState<DraftEditors>({});
   const [conversationNotes, setConversationNotes] = useState<ConversationNotes>({});
@@ -283,6 +285,15 @@ export function DashboardShell() {
         setLaunchMetrics(await api.getLaunchMetrics());
       } catch {
         setLaunchMetrics(null);
+      }
+    })();
+
+    void (async () => {
+      try {
+        const queue = await api.listWaitlistEntries();
+        setWaitlistEntries(queue.items);
+      } catch {
+        setWaitlistEntries([]);
       }
     })();
   }, []);
@@ -463,6 +474,8 @@ export function DashboardShell() {
           : "Welcome back. Your dashboard is loading.",
       );
       setLaunchMetrics(await api.getLaunchMetrics());
+      const queue = await api.listWaitlistEntries();
+      setWaitlistEntries(queue.items);
     } catch (error) {
       setStatusMessage(error instanceof Error ? error.message : "Authentication failed.");
     } finally {
@@ -861,6 +874,8 @@ export function DashboardShell() {
           : `Added ${result.entry.email} to the founding-user list.`,
       );
       setLaunchMetrics(await api.getLaunchMetrics());
+      const queue = await api.listWaitlistEntries();
+      setWaitlistEntries(queue.items);
       setWaitlistForm((current) => ({
         ...current,
         notes: "",
@@ -1280,6 +1295,30 @@ export function DashboardShell() {
                       </div>
                     ))}
                   </div>
+                </div>
+              )}
+            </div>
+            <div className="status-card">
+              <strong>Founder queue</strong>
+              {!waitlistEntries.length ? (
+                <p>No interested users captured yet.</p>
+              ) : (
+                <div className="history-list">
+                  {waitlistEntries.slice(0, 5).map((entry) => (
+                    <div className="history-item" key={entry.id}>
+                      <div className="conversation-head compact-head">
+                        <div>
+                          <h3>{entry.fullName ?? entry.email}</h3>
+                          <p>{entry.email}</p>
+                        </div>
+                        <span className="priority priority-low">{entry.segment ?? "lead"}</span>
+                      </div>
+                      <p className="helper-copy">{entry.notes ?? "No notes yet."}</p>
+                      <p className="helper-copy">
+                        {entry.source} · joined {formatDate(entry.createdAt)}
+                      </p>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
