@@ -21,6 +21,7 @@ type AuthMode = "login" | "register";
 type DraftsByFollowUp = Record<string, DraftRecord[]>;
 type DraftEditors = Record<string, string>;
 type ConversationNotes = Record<string, string>;
+type FounderNotes = Record<string, string>;
 type WaitlistForm = {
   fullName: string;
   email: string;
@@ -91,7 +92,8 @@ type ActivityState =
   | "demo"
   | "checkout"
   | "waitlist"
-  | "queue";
+  | "queue"
+  | "queue-notes";
 
 function formatPriority(priority: FollowUpItem["priority"]) {
   return priority.charAt(0).toUpperCase() + priority.slice(1);
@@ -142,6 +144,8 @@ function getActivityLabel(activity: ActivityState) {
       return "Saving your early-access request";
     case "queue":
       return "Updating founder queue";
+    case "queue-notes":
+      return "Saving founder notes";
     default:
       return "Working";
   }
@@ -203,6 +207,7 @@ export function DashboardShell() {
   const [draftHistory, setDraftHistory] = useState<DraftsByFollowUp>({});
   const [draftEditors, setDraftEditors] = useState<DraftEditors>({});
   const [conversationNotes, setConversationNotes] = useState<ConversationNotes>({});
+  const [founderNotes, setFounderNotes] = useState<FounderNotes>({});
   const [waitlistForm, setWaitlistForm] = useState<WaitlistForm>({
     fullName: "",
     email: "",
@@ -295,8 +300,12 @@ export function DashboardShell() {
       try {
         const queue = await api.listWaitlistEntries();
         setWaitlistEntries(queue.items);
+        setFounderNotes(
+          Object.fromEntries(queue.items.map((entry) => [entry.id, entry.notes ?? ""])),
+        );
       } catch {
         setWaitlistEntries([]);
+        setFounderNotes({});
       }
     })();
   }, []);
@@ -879,6 +888,9 @@ export function DashboardShell() {
       setLaunchMetrics(await api.getLaunchMetrics());
       const queue = await api.listWaitlistEntries();
       setWaitlistEntries(queue.items);
+      setFounderNotes(
+        Object.fromEntries(queue.items.map((entry) => [entry.id, entry.notes ?? ""])),
+      );
       setWaitlistForm((current) => ({
         ...current,
         notes: "",
@@ -902,10 +914,35 @@ export function DashboardShell() {
         api.getLaunchMetrics(),
       ]);
       setWaitlistEntries(queue.items);
+      setFounderNotes(
+        Object.fromEntries(queue.items.map((entry) => [entry.id, entry.notes ?? ""])),
+      );
       setLaunchMetrics(metrics);
       setStatusMessage(`Founder queue updated: ${status.replace(/_/g, " ").toLowerCase()}.`);
     } catch (error) {
       setStatusMessage(error instanceof Error ? error.message : "Failed to update founder queue.");
+    } finally {
+      setIsBusy(false);
+      setActivity("idle");
+    }
+  }
+
+  async function handleQueueNotesSave(entryId: string) {
+    setIsBusy(true);
+    setActivity("queue-notes");
+
+    try {
+      await api.updateWaitlistEntry(entryId, {
+        notes: founderNotes[entryId] ?? "",
+      });
+      const queue = await api.listWaitlistEntries();
+      setWaitlistEntries(queue.items);
+      setFounderNotes(
+        Object.fromEntries(queue.items.map((entry) => [entry.id, entry.notes ?? ""])),
+      );
+      setStatusMessage("Founder notes saved.");
+    } catch (error) {
+      setStatusMessage(error instanceof Error ? error.message : "Failed to save founder notes.");
     } finally {
       setIsBusy(false);
       setActivity("idle");
@@ -1341,6 +1378,28 @@ export function DashboardShell() {
                       <p className="helper-copy">
                         {(entry.segment ?? "lead")} · {entry.source} · joined {formatDate(entry.createdAt)}
                       </p>
+                      <div className="notes-box">
+                        <strong>Founder notes</strong>
+                        <textarea
+                          className="notes-editor"
+                          value={founderNotes[entry.id] ?? entry.notes ?? ""}
+                          onChange={(event) =>
+                            setFounderNotes((current) => ({
+                              ...current,
+                              [entry.id]: event.target.value,
+                            }))
+                          }
+                        />
+                        <div className="button-row compact">
+                          <button
+                            className="ghost-button"
+                            disabled={isBusy}
+                            onClick={() => handleQueueNotesSave(entry.id)}
+                          >
+                            Save notes
+                          </button>
+                        </div>
+                      </div>
                       <div className="button-row compact">
                         <button
                           className="ghost-button"
