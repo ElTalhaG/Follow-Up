@@ -228,7 +228,10 @@ async function main() {
       segment: "freelancer",
       notes: "Interested in a founding-user trial as soon as Gmail staging is live.",
       source: "landing-page",
+      status: "NEW",
+      lastContactedAt: null,
       createdAt: now,
+      updatedAt: now,
     },
   });
 

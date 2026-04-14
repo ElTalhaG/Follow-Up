@@ -46,7 +46,10 @@ db.exec(`
     "segment" TEXT,
     "notes" TEXT,
     "source" TEXT NOT NULL,
-    "createdAt" DATETIME NOT NULL
+    "status" TEXT NOT NULL,
+    "lastContactedAt" DATETIME,
+    "createdAt" DATETIME NOT NULL,
+    "updatedAt" DATETIME NOT NULL
   );
 
   CREATE TABLE IF NOT EXISTS "LaunchEvent" (
@@ -160,8 +163,10 @@ const insertUser = db.prepare(`
 `);
 
 const insertWaitlistEntry = db.prepare(`
-  INSERT INTO "WaitlistEntry" ("id", "email", "fullName", "segment", "notes", "source", "createdAt")
-  VALUES (?, ?, ?, ?, ?, ?, ?)
+  INSERT INTO "WaitlistEntry" (
+    "id", "email", "fullName", "segment", "notes", "source", "status", "lastContactedAt", "createdAt", "updatedAt"
+  )
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 `);
 
 const insertLaunchEvent = db.prepare(`
@@ -227,6 +232,9 @@ insertWaitlistEntry.run(
   "freelancer",
   "Interested in a founding-user trial as soon as Gmail staging is live.",
   "landing-page",
+  "NEW",
+  null,
+  now,
   now,
 );
 

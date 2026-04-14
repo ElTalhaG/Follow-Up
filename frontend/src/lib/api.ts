@@ -113,7 +113,10 @@ export type WaitlistEntry = {
   segment: string | null;
   notes: string | null;
   source: string;
+  status: string;
+  lastContactedAt: string | null;
   createdAt: string;
+  updatedAt: string;
 };
 
 export type LaunchMetrics = {
@@ -328,6 +331,12 @@ export const api = {
   },
   listWaitlistEntries(limit = 8) {
     return request<{ items: WaitlistEntry[] }>(`/launch/waitlist?limit=${limit}`);
+  },
+  updateWaitlistEntry(entryId: string, input: { status?: string; notes?: string }) {
+    return request<{ entry: WaitlistEntry }>(`/launch/waitlist/${entryId}`, {
+      method: "PATCH",
+      body: JSON.stringify(input),
+    });
   },
   getLaunchMetrics() {
     return request<LaunchMetrics>("/launch/metrics");

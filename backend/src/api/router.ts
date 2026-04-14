@@ -29,7 +29,11 @@ import {
 } from "../follow-up/reminders.js";
 import { createCheckoutLink, listBillingPlans } from "../billing/service.js";
 import { getLaunchMetrics } from "../launch/metrics.js";
-import { createWaitlistEntry, listWaitlistEntries } from "../launch/waitlist.js";
+import {
+  createWaitlistEntry,
+  listWaitlistEntries,
+  updateWaitlistEntry,
+} from "../launch/waitlist.js";
 
 export function buildRouter() {
   const router = Router();
@@ -78,6 +82,20 @@ export function buildRouter() {
       const limit = Number(request.query.limit ?? 8);
       const items = await listWaitlistEntries(limit);
       response.json({ items });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  router.patch("/launch/waitlist/:entryId", async (request, response, next) => {
+    try {
+      const entryId = String(request.params.entryId ?? "");
+      const entry = await updateWaitlistEntry(entryId, {
+        status: request.body.status === undefined ? undefined : String(request.body.status),
+        notes: request.body.notes === undefined ? undefined : String(request.body.notes),
+      });
+
+      response.json({ entry });
     } catch (error) {
       next(error);
     }

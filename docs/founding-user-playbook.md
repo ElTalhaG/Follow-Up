@@ -14,6 +14,7 @@ Use it to collect:
 - email
 - segment
 - short context on how they would use Followup
+- founder queue status
 
 ## Who To Target First
 
@@ -34,3 +35,14 @@ Use it to collect:
 2. talk to them manually
 3. watch where setup breaks
 4. convert the best-fit users into trial or paid accounts
+
+## Queue Workflow
+
+Move interested leads through simple states:
+
+- `NEW`
+- `CONTACTED`
+- `CALL_SCHEDULED`
+- `ACTIVE_TRIAL`
+- `PAID`
+- `BAD_FIT`

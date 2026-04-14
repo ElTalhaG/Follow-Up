@@ -1,6 +1,10 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { createWaitlistEntry, listWaitlistEntries } from "../dist/launch/waitlist.js";
+import {
+  createWaitlistEntry,
+  listWaitlistEntries,
+  updateWaitlistEntry,
+} from "../dist/launch/waitlist.js";
 import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
@@ -62,4 +66,26 @@ test("waitlist entries can be listed for founder queue review", async () => {
 
   assert.ok(items.some((item) => item.email === "queue-a@example.com"));
   assert.ok(items.some((item) => item.email === "queue-b@example.com"));
+});
+
+test("waitlist entries can move through founder queue statuses", async () => {
+  await prisma.waitlistEntry.deleteMany({
+    where: { email: "queue-status@example.com" },
+  });
+
+  const created = await createWaitlistEntry({
+    email: "queue-status@example.com",
+    fullName: "Queue Status",
+    segment: "consultant",
+    source: "manual-outreach",
+  });
+
+  const updated = await updateWaitlistEntry(created.entry.id, {
+    status: "CONTACTED",
+    notes: "Sent the first founder outreach message.",
+  });
+
+  assert.equal(updated.status, "CONTACTED");
+  assert.equal(updated.notes, "Sent the first founder outreach message.");
+  assert.ok(updated.lastContactedAt);
 });

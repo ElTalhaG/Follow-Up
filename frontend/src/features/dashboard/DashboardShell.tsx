@@ -90,7 +90,8 @@ type ActivityState =
   | "notes"
   | "demo"
   | "checkout"
-  | "waitlist";
+  | "waitlist"
+  | "queue";
 
 function formatPriority(priority: FollowUpItem["priority"]) {
   return priority.charAt(0).toUpperCase() + priority.slice(1);
@@ -139,6 +140,8 @@ function getActivityLabel(activity: ActivityState) {
       return "Preparing checkout";
     case "waitlist":
       return "Saving your early-access request";
+    case "queue":
+      return "Updating founder queue";
     default:
       return "Working";
   }
@@ -888,6 +891,27 @@ export function DashboardShell() {
     }
   }
 
+  async function handleQueueStatus(entryId: string, status: string) {
+    setIsBusy(true);
+    setActivity("queue");
+
+    try {
+      await api.updateWaitlistEntry(entryId, { status });
+      const [queue, metrics] = await Promise.all([
+        api.listWaitlistEntries(),
+        api.getLaunchMetrics(),
+      ]);
+      setWaitlistEntries(queue.items);
+      setLaunchMetrics(metrics);
+      setStatusMessage(`Founder queue updated: ${status.replace(/_/g, " ").toLowerCase()}.`);
+    } catch (error) {
+      setStatusMessage(error instanceof Error ? error.message : "Failed to update founder queue.");
+    } finally {
+      setIsBusy(false);
+      setActivity("idle");
+    }
+  }
+
   return (
     <main className="app-shell">
       {isBusy ? (
@@ -1311,12 +1335,42 @@ export function DashboardShell() {
                           <h3>{entry.fullName ?? entry.email}</h3>
                           <p>{entry.email}</p>
                         </div>
-                        <span className="priority priority-low">{entry.segment ?? "lead"}</span>
+                        <span className="priority priority-low">{entry.status.toLowerCase()}</span>
                       </div>
                       <p className="helper-copy">{entry.notes ?? "No notes yet."}</p>
                       <p className="helper-copy">
-                        {entry.source} · joined {formatDate(entry.createdAt)}
+                        {(entry.segment ?? "lead")} · {entry.source} · joined {formatDate(entry.createdAt)}
                       </p>
+                      <div className="button-row compact">
+                        <button
+                          className="ghost-button"
+                          disabled={isBusy}
+                          onClick={() => handleQueueStatus(entry.id, "CONTACTED")}
+                        >
+                          Contacted
+                        </button>
+                        <button
+                          className="ghost-button"
+                          disabled={isBusy}
+                          onClick={() => handleQueueStatus(entry.id, "CALL_SCHEDULED")}
+                        >
+                          Call scheduled
+                        </button>
+                        <button
+                          className="ghost-button"
+                          disabled={isBusy}
+                          onClick={() => handleQueueStatus(entry.id, "ACTIVE_TRIAL")}
+                        >
+                          Active trial
+                        </button>
+                        <button
+                          className="ghost-button"
+                          disabled={isBusy}
+                          onClick={() => handleQueueStatus(entry.id, "PAID")}
+                        >
+                          Paid
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
