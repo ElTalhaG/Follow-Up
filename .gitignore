@@ -1,6 +1,8 @@
 node_modules
 dist
 .env
+.env.*
+!.env.example
 .env.local
 .DS_Store
 coverage
@@ -8,4 +10,16 @@ coverage
 .idea
 backend/dev.db
 backend/prisma/dev.db
+*.sqlite
+*.sqlite3
+*.db
+*.pem
+*.key
+*.p12
+*.crt
+*.csr
+*.secret
+secrets/
+tmp/
+*.local
 *.tsbuildinfo
