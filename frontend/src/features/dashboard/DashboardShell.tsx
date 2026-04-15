@@ -24,6 +24,7 @@ type ConversationNotes = Record<string, string>;
 type FounderNotes = Record<string, string>;
 type FounderNextActions = Record<string, string>;
 type FounderFollowUpDates = Record<string, string>;
+type FounderQueueView = "all" | "due" | "overdue" | "upcoming";
 type WaitlistForm = {
   fullName: string;
   email: string;
@@ -215,6 +216,7 @@ export function DashboardShell() {
   const [founderNotes, setFounderNotes] = useState<FounderNotes>({});
   const [founderNextActions, setFounderNextActions] = useState<FounderNextActions>({});
   const [founderFollowUpDates, setFounderFollowUpDates] = useState<FounderFollowUpDates>({});
+  const [founderQueueView, setFounderQueueView] = useState<FounderQueueView>("all");
   const [waitlistForm, setWaitlistForm] = useState<WaitlistForm>({
     fullName: "",
     email: "",
@@ -231,6 +233,53 @@ export function DashboardShell() {
   const completedFollowUps = followUps.filter((item) => item.actionStatus === "done");
   const activeConversations = conversations.filter((item) => item.status !== "closed").slice(0, 4);
   const dueReminders = reminders.filter((item) => item.isDue);
+  const now = Date.now();
+  const endOfToday = new Date();
+  endOfToday.setHours(23, 59, 59, 999);
+  const endOfTodayMs = endOfToday.getTime();
+  const founderDueTodayCount = waitlistEntries.filter((entry) => {
+    if (!entry.followUpAt) {
+      return false;
+    }
+
+    const followUpTime = new Date(entry.followUpAt).getTime();
+    return followUpTime >= now && followUpTime <= endOfTodayMs;
+  }).length;
+  const founderOverdueCount = waitlistEntries.filter((entry) => {
+    if (!entry.followUpAt) {
+      return false;
+    }
+
+    return new Date(entry.followUpAt).getTime() < now;
+  }).length;
+  const founderUpcomingCount = waitlistEntries.filter((entry) => {
+    if (!entry.followUpAt) {
+      return false;
+    }
+
+    return new Date(entry.followUpAt).getTime() > endOfTodayMs;
+  }).length;
+  const visibleWaitlistEntries = waitlistEntries.filter((entry) => {
+    if (founderQueueView === "all") {
+      return true;
+    }
+
+    if (!entry.followUpAt) {
+      return false;
+    }
+
+    const followUpTime = new Date(entry.followUpAt).getTime();
+
+    if (founderQueueView === "due") {
+      return followUpTime >= now && followUpTime <= endOfTodayMs;
+    }
+
+    if (founderQueueView === "overdue") {
+      return followUpTime < now;
+    }
+
+    return followUpTime > endOfTodayMs;
+  });
   const hasConnectedInbox = accounts.length > 0;
   const hasSyncedData = conversations.length > 0;
   const hasDetectedWork = followUps.length > 0;
@@ -1435,11 +1484,44 @@ export function DashboardShell() {
             </div>
             <div className="status-card">
               <strong>Founder queue</strong>
-              {!waitlistEntries.length ? (
+              <div className="toggle-row">
+                <button
+                  className={`toggle-button ${founderQueueView === "all" ? "active" : ""}`}
+                  onClick={() => setFounderQueueView("all")}
+                  type="button"
+                >
+                  All
+                </button>
+                <button
+                  className={`toggle-button ${founderQueueView === "due" ? "active" : ""}`}
+                  onClick={() => setFounderQueueView("due")}
+                  type="button"
+                >
+                  Due today
+                </button>
+                <button
+                  className={`toggle-button ${founderQueueView === "overdue" ? "active" : ""}`}
+                  onClick={() => setFounderQueueView("overdue")}
+                  type="button"
+                >
+                  Overdue
+                </button>
+                <button
+                  className={`toggle-button ${founderQueueView === "upcoming" ? "active" : ""}`}
+                  onClick={() => setFounderQueueView("upcoming")}
+                  type="button"
+                >
+                  Upcoming
+                </button>
+              </div>
+              <p className="helper-copy">
+                {founderOverdueCount} overdue · {founderDueTodayCount} due today · {founderUpcomingCount} upcoming
+              </p>
+              {!visibleWaitlistEntries.length ? (
                 <p>No interested users captured yet.</p>
               ) : (
                 <div className="history-list">
-                  {waitlistEntries.slice(0, 5).map((entry) => (
+                  {visibleWaitlistEntries.slice(0, 5).map((entry) => (
                     <div className="history-item" key={entry.id}>
                       <div className="conversation-head compact-head">
                         <div>
