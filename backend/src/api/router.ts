@@ -93,6 +93,14 @@ export function buildRouter() {
       const entry = await updateWaitlistEntry(entryId, {
         status: request.body.status === undefined ? undefined : String(request.body.status),
         notes: request.body.notes === undefined ? undefined : String(request.body.notes),
+        nextAction:
+          request.body.nextAction === undefined ? undefined : String(request.body.nextAction),
+        followUpAt:
+          request.body.followUpAt === undefined
+            ? undefined
+            : request.body.followUpAt === null
+              ? null
+              : String(request.body.followUpAt),
       });
 
       response.json({ entry });

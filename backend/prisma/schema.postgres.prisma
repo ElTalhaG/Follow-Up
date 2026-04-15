@@ -54,6 +54,8 @@ model WaitlistEntry {
   fullName        String?
   segment         String?
   notes           String?
+  nextAction      String?
+  followUpAt      DateTime?
   source          String
   status          String   @default("NEW")
   lastContactedAt DateTime?

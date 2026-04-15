@@ -45,6 +45,8 @@ db.exec(`
     "fullName" TEXT,
     "segment" TEXT,
     "notes" TEXT,
+    "nextAction" TEXT,
+    "followUpAt" DATETIME,
     "source" TEXT NOT NULL,
     "status" TEXT NOT NULL,
     "lastContactedAt" DATETIME,
@@ -164,9 +166,9 @@ const insertUser = db.prepare(`
 
 const insertWaitlistEntry = db.prepare(`
   INSERT INTO "WaitlistEntry" (
-    "id", "email", "fullName", "segment", "notes", "source", "status", "lastContactedAt", "createdAt", "updatedAt"
+    "id", "email", "fullName", "segment", "notes", "nextAction", "followUpAt", "source", "status", "lastContactedAt", "createdAt", "updatedAt"
   )
-  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 `);
 
 const insertLaunchEvent = db.prepare(`
@@ -231,6 +233,8 @@ insertWaitlistEntry.run(
   "Jamie Rivera",
   "freelancer",
   "Interested in a founding-user trial as soon as Gmail staging is live.",
+  "Send staging invite once hosted OAuth is ready.",
+  "2026-03-29T09:00:00.000Z",
   "landing-page",
   "NEW",
   null,

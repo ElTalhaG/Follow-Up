@@ -83,9 +83,13 @@ test("waitlist entries can move through founder queue statuses", async () => {
   const updated = await updateWaitlistEntry(created.entry.id, {
     status: "CONTACTED",
     notes: "Sent the first founder outreach message.",
+    nextAction: "Follow up if no reply.",
+    followUpAt: "2026-03-30T09:30:00.000Z",
   });
 
   assert.equal(updated.status, "CONTACTED");
   assert.equal(updated.notes, "Sent the first founder outreach message.");
+  assert.equal(updated.nextAction, "Follow up if no reply.");
+  assert.equal(updated.followUpAt, "2026-03-30T09:30:00.000Z");
   assert.ok(updated.lastContactedAt);
 });

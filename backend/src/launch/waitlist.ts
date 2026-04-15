@@ -13,6 +13,8 @@ type CreateWaitlistEntryInput = {
 type UpdateWaitlistEntryInput = {
   status?: string;
   notes?: string;
+  nextAction?: string;
+  followUpAt?: string | null;
 };
 
 const ALLOWED_WAITLIST_STATUSES = [
@@ -30,6 +32,8 @@ function serializeWaitlistEntry(entry: {
   fullName: string | null;
   segment: string | null;
   notes: string | null;
+  nextAction?: string | null;
+  followUpAt?: Date | null;
   source: string;
   status?: string;
   lastContactedAt?: Date | null;
@@ -42,6 +46,8 @@ function serializeWaitlistEntry(entry: {
     fullName: entry.fullName,
     segment: entry.segment,
     notes: entry.notes,
+    nextAction: entry.nextAction ?? null,
+    followUpAt: entry.followUpAt?.toISOString() ?? null,
     source: entry.source,
     status: entry.status ?? "NEW",
     lastContactedAt: entry.lastContactedAt?.toISOString() ?? null,
@@ -64,6 +70,8 @@ export async function createWaitlistEntry(input: CreateWaitlistEntryInput) {
   const fullName = input.fullName?.trim() || null;
   const segment = input.segment?.trim() || null;
   const notes = input.notes?.trim() || null;
+  const nextAction = null;
+  const followUpAt = null;
   const source = input.source?.trim() || "landing-page";
 
   if (!validateEmail(email)) {
@@ -87,6 +95,8 @@ export async function createWaitlistEntry(input: CreateWaitlistEntryInput) {
       fullName,
       segment,
       notes,
+      nextAction,
+      followUpAt,
       source,
       status: "NEW",
     },
@@ -119,9 +129,16 @@ export async function updateWaitlistEntry(entryId: string, input: UpdateWaitlist
   const waitlistEntry = (prisma as unknown as { waitlistEntry: any }).waitlistEntry;
   const status = input.status?.trim().toUpperCase();
   const notes = input.notes?.trim();
+  const nextAction = input.nextAction?.trim();
+  const followUpAt =
+    input.followUpAt === undefined
+      ? undefined
+      : input.followUpAt
+        ? new Date(input.followUpAt)
+        : null;
 
-  if (!status && notes === undefined) {
-    throw new AuthError("Provide a status or notes update.", 400);
+  if (!status && notes === undefined && nextAction === undefined && followUpAt === undefined) {
+    throw new AuthError("Provide a status, notes, next action, or follow-up date.", 400);
   }
 
   if (status && !ALLOWED_WAITLIST_STATUSES.includes(status as (typeof ALLOWED_WAITLIST_STATUSES)[number])) {
@@ -144,6 +161,8 @@ export async function updateWaitlistEntry(entryId: string, input: UpdateWaitlist
     data: {
       status: status ?? entry.status,
       notes: notes === undefined ? entry.notes : notes || null,
+      nextAction: nextAction === undefined ? entry.nextAction ?? null : nextAction || null,
+      followUpAt: followUpAt === undefined ? entry.followUpAt ?? null : followUpAt,
       lastContactedAt:
         status && status !== "NEW" && status !== "BAD_FIT" ? new Date() : entry.lastContactedAt,
     },

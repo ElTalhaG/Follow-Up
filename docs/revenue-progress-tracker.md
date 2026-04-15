@@ -49,7 +49,7 @@
 - `not started` onboard 5 to 10 real users manually
 - `not started` use one niche first
 - `in progress` watch real usage closely
-- `not started` collect every friction point in setup and activation
+- `in progress` collect every friction point in setup and activation
 - `not started` improve onboarding based on actual user confusion
 
 ## Phase R6: Monetization

@@ -15,6 +15,8 @@ Use it to collect:
 - segment
 - short context on how they would use Followup
 - founder queue status
+- next action
+- follow-up date
 
 ## Who To Target First
 
@@ -46,3 +48,8 @@ Move interested leads through simple states:
 - `ACTIVE_TRIAL`
 - `PAID`
 - `BAD_FIT`
+
+Track one concrete next step on each lead as well:
+
+- what you need to do next
+- when you should follow up

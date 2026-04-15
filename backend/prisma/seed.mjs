@@ -227,6 +227,8 @@ async function main() {
       fullName: "Jamie Rivera",
       segment: "freelancer",
       notes: "Interested in a founding-user trial as soon as Gmail staging is live.",
+      nextAction: "Send staging invite once hosted OAuth is ready.",
+      followUpAt: new Date("2026-03-29T09:00:00.000Z"),
       source: "landing-page",
       status: "NEW",
       lastContactedAt: null,

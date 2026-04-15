@@ -22,6 +22,8 @@ type DraftsByFollowUp = Record<string, DraftRecord[]>;
 type DraftEditors = Record<string, string>;
 type ConversationNotes = Record<string, string>;
 type FounderNotes = Record<string, string>;
+type FounderNextActions = Record<string, string>;
+type FounderFollowUpDates = Record<string, string>;
 type WaitlistForm = {
   fullName: string;
   email: string;
@@ -93,7 +95,8 @@ type ActivityState =
   | "checkout"
   | "waitlist"
   | "queue"
-  | "queue-notes";
+  | "queue-notes"
+  | "queue-plan";
 
 function formatPriority(priority: FollowUpItem["priority"]) {
   return priority.charAt(0).toUpperCase() + priority.slice(1);
@@ -146,6 +149,8 @@ function getActivityLabel(activity: ActivityState) {
       return "Updating founder queue";
     case "queue-notes":
       return "Saving founder notes";
+    case "queue-plan":
+      return "Saving next founder step";
     default:
       return "Working";
   }
@@ -208,6 +213,8 @@ export function DashboardShell() {
   const [draftEditors, setDraftEditors] = useState<DraftEditors>({});
   const [conversationNotes, setConversationNotes] = useState<ConversationNotes>({});
   const [founderNotes, setFounderNotes] = useState<FounderNotes>({});
+  const [founderNextActions, setFounderNextActions] = useState<FounderNextActions>({});
+  const [founderFollowUpDates, setFounderFollowUpDates] = useState<FounderFollowUpDates>({});
   const [waitlistForm, setWaitlistForm] = useState<WaitlistForm>({
     fullName: "",
     email: "",
@@ -303,9 +310,22 @@ export function DashboardShell() {
         setFounderNotes(
           Object.fromEntries(queue.items.map((entry) => [entry.id, entry.notes ?? ""])),
         );
+        setFounderNextActions(
+          Object.fromEntries(queue.items.map((entry) => [entry.id, entry.nextAction ?? ""])),
+        );
+        setFounderFollowUpDates(
+          Object.fromEntries(
+            queue.items.map((entry) => [
+              entry.id,
+              entry.followUpAt ? entry.followUpAt.slice(0, 16) : "",
+            ]),
+          ),
+        );
       } catch {
         setWaitlistEntries([]);
         setFounderNotes({});
+        setFounderNextActions({});
+        setFounderFollowUpDates({});
       }
     })();
   }, []);
@@ -891,6 +911,14 @@ export function DashboardShell() {
       setFounderNotes(
         Object.fromEntries(queue.items.map((entry) => [entry.id, entry.notes ?? ""])),
       );
+      setFounderNextActions(
+        Object.fromEntries(queue.items.map((entry) => [entry.id, entry.nextAction ?? ""])),
+      );
+      setFounderFollowUpDates(
+        Object.fromEntries(
+          queue.items.map((entry) => [entry.id, entry.followUpAt ? entry.followUpAt.slice(0, 16) : ""]),
+        ),
+      );
       setWaitlistForm((current) => ({
         ...current,
         notes: "",
@@ -917,6 +945,14 @@ export function DashboardShell() {
       setFounderNotes(
         Object.fromEntries(queue.items.map((entry) => [entry.id, entry.notes ?? ""])),
       );
+      setFounderNextActions(
+        Object.fromEntries(queue.items.map((entry) => [entry.id, entry.nextAction ?? ""])),
+      );
+      setFounderFollowUpDates(
+        Object.fromEntries(
+          queue.items.map((entry) => [entry.id, entry.followUpAt ? entry.followUpAt.slice(0, 16) : ""]),
+        ),
+      );
       setLaunchMetrics(metrics);
       setStatusMessage(`Founder queue updated: ${status.replace(/_/g, " ").toLowerCase()}.`);
     } catch (error) {
@@ -940,9 +976,47 @@ export function DashboardShell() {
       setFounderNotes(
         Object.fromEntries(queue.items.map((entry) => [entry.id, entry.notes ?? ""])),
       );
+      setFounderNextActions(
+        Object.fromEntries(queue.items.map((entry) => [entry.id, entry.nextAction ?? ""])),
+      );
+      setFounderFollowUpDates(
+        Object.fromEntries(
+          queue.items.map((entry) => [entry.id, entry.followUpAt ? entry.followUpAt.slice(0, 16) : ""]),
+        ),
+      );
       setStatusMessage("Founder notes saved.");
     } catch (error) {
       setStatusMessage(error instanceof Error ? error.message : "Failed to save founder notes.");
+    } finally {
+      setIsBusy(false);
+      setActivity("idle");
+    }
+  }
+
+  async function handleQueuePlanSave(entryId: string) {
+    setIsBusy(true);
+    setActivity("queue-plan");
+
+    try {
+      await api.updateWaitlistEntryPlan(entryId, {
+        nextAction: founderNextActions[entryId] ?? "",
+        followUpAt: founderFollowUpDates[entryId]
+          ? new Date(founderFollowUpDates[entryId]).toISOString()
+          : null,
+      });
+      const queue = await api.listWaitlistEntries();
+      setWaitlistEntries(queue.items);
+      setFounderNextActions(
+        Object.fromEntries(queue.items.map((entry) => [entry.id, entry.nextAction ?? ""])),
+      );
+      setFounderFollowUpDates(
+        Object.fromEntries(
+          queue.items.map((entry) => [entry.id, entry.followUpAt ? entry.followUpAt.slice(0, 16) : ""]),
+        ),
+      );
+      setStatusMessage("Founder next step saved.");
+    } catch (error) {
+      setStatusMessage(error instanceof Error ? error.message : "Failed to save founder next step.");
     } finally {
       setIsBusy(false);
       setActivity("idle");
@@ -1378,6 +1452,41 @@ export function DashboardShell() {
                       <p className="helper-copy">
                         {(entry.segment ?? "lead")} · {entry.source} · joined {formatDate(entry.createdAt)}
                       </p>
+                      <div className="notes-box">
+                        <strong>Next action</strong>
+                        <input
+                          className="draft-editor"
+                          value={founderNextActions[entry.id] ?? entry.nextAction ?? ""}
+                          onChange={(event) =>
+                            setFounderNextActions((current) => ({
+                              ...current,
+                              [entry.id]: event.target.value,
+                            }))
+                          }
+                        />
+                        <label className="field">
+                          <span>Follow up on</span>
+                          <input
+                            type="datetime-local"
+                            value={founderFollowUpDates[entry.id] ?? ""}
+                            onChange={(event) =>
+                              setFounderFollowUpDates((current) => ({
+                                ...current,
+                                [entry.id]: event.target.value,
+                              }))
+                            }
+                          />
+                        </label>
+                        <div className="button-row compact">
+                          <button
+                            className="ghost-button"
+                            disabled={isBusy}
+                            onClick={() => handleQueuePlanSave(entry.id)}
+                          >
+                            Save next step
+                          </button>
+                        </div>
+                      </div>
                       <div className="notes-box">
                         <strong>Founder notes</strong>
                         <textarea

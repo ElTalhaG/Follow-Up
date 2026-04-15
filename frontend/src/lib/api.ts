@@ -112,6 +112,8 @@ export type WaitlistEntry = {
   fullName: string | null;
   segment: string | null;
   notes: string | null;
+  nextAction: string | null;
+  followUpAt: string | null;
   source: string;
   status: string;
   lastContactedAt: string | null;
@@ -333,6 +335,15 @@ export const api = {
     return request<{ items: WaitlistEntry[] }>(`/launch/waitlist?limit=${limit}`);
   },
   updateWaitlistEntry(entryId: string, input: { status?: string; notes?: string }) {
+    return request<{ entry: WaitlistEntry }>(`/launch/waitlist/${entryId}`, {
+      method: "PATCH",
+      body: JSON.stringify(input),
+    });
+  },
+  updateWaitlistEntryPlan(
+    entryId: string,
+    input: { nextAction?: string; followUpAt?: string | null; notes?: string },
+  ) {
     return request<{ entry: WaitlistEntry }>(`/launch/waitlist/${entryId}`, {
       method: "PATCH",
       body: JSON.stringify(input),
