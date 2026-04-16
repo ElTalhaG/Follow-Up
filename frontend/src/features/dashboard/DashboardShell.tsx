@@ -97,7 +97,8 @@ type ActivityState =
   | "waitlist"
   | "queue"
   | "queue-notes"
-  | "queue-plan";
+  | "queue-plan"
+  | "queue-touch";
 
 function formatPriority(priority: FollowUpItem["priority"]) {
   return priority.charAt(0).toUpperCase() + priority.slice(1);
@@ -152,6 +153,8 @@ function getActivityLabel(activity: ActivityState) {
       return "Saving founder notes";
     case "queue-plan":
       return "Saving next founder step";
+    case "queue-touch":
+      return "Logging founder outreach";
     default:
       return "Working";
   }
@@ -1072,6 +1075,36 @@ export function DashboardShell() {
     }
   }
 
+  async function handleQueueTouch(
+    entryId: string,
+    type: "INVITE_SENT" | "FOLLOW_UP_SENT" | "CALL_BOOKED",
+  ) {
+    setIsBusy(true);
+    setActivity("queue-touch");
+
+    try {
+      await api.recordWaitlistTouch(entryId, type);
+      const [queue, metrics] = await Promise.all([
+        api.listWaitlistEntries(),
+        api.getLaunchMetrics(),
+      ]);
+      setWaitlistEntries(queue.items);
+      setLaunchMetrics(metrics);
+      setStatusMessage(
+        type === "INVITE_SENT"
+          ? "Founder invite logged."
+          : type === "FOLLOW_UP_SENT"
+            ? "Founder follow-up logged."
+            : "Founder call booked.",
+      );
+    } catch (error) {
+      setStatusMessage(error instanceof Error ? error.message : "Failed to log founder outreach.");
+    } finally {
+      setIsBusy(false);
+      setActivity("idle");
+    }
+  }
+
   return (
     <main className="app-shell">
       {isBusy ? (
@@ -1468,6 +1501,14 @@ export function DashboardShell() {
                       <strong>{launchMetrics.totals.checkoutClicks}</strong>
                       <span>Checkout clicks</span>
                     </div>
+                    <div className="analytics-stat">
+                      <strong>{launchMetrics.totals.invitesSent}</strong>
+                      <span>Invites sent</span>
+                    </div>
+                    <div className="analytics-stat">
+                      <strong>{launchMetrics.totals.callsBooked}</strong>
+                      <span>Calls booked</span>
+                    </div>
                   </div>
                   <div className="history-list">
                     {launchMetrics.recentEvents.slice(0, 4).map((event) => (
@@ -1592,6 +1633,27 @@ export function DashboardShell() {
                         </div>
                       </div>
                       <div className="button-row compact">
+                        <button
+                          className="ghost-button"
+                          disabled={isBusy}
+                          onClick={() => handleQueueTouch(entry.id, "INVITE_SENT")}
+                        >
+                          Invite sent
+                        </button>
+                        <button
+                          className="ghost-button"
+                          disabled={isBusy}
+                          onClick={() => handleQueueTouch(entry.id, "FOLLOW_UP_SENT")}
+                        >
+                          Follow-up sent
+                        </button>
+                        <button
+                          className="ghost-button"
+                          disabled={isBusy}
+                          onClick={() => handleQueueTouch(entry.id, "CALL_BOOKED")}
+                        >
+                          Call booked
+                        </button>
                         <button
                           className="ghost-button"
                           disabled={isBusy}

@@ -126,6 +126,8 @@ export type LaunchMetrics = {
     signups: number;
     waitlistJoins: number;
     checkoutClicks: number;
+    invitesSent: number;
+    callsBooked: number;
   };
   recentEvents: Array<{
     id: string;
@@ -347,6 +349,12 @@ export const api = {
     return request<{ entry: WaitlistEntry }>(`/launch/waitlist/${entryId}`, {
       method: "PATCH",
       body: JSON.stringify(input),
+    });
+  },
+  recordWaitlistTouch(entryId: string, type: "INVITE_SENT" | "FOLLOW_UP_SENT" | "CALL_BOOKED") {
+    return request<{ entry: WaitlistEntry }>(`/launch/waitlist/${entryId}/touch`, {
+      method: "POST",
+      body: JSON.stringify({ type }),
     });
   },
   getLaunchMetrics() {

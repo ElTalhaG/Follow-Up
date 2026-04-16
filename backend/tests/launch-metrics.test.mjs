@@ -27,11 +27,23 @@ test("launch metrics summarize signup, waitlist, and checkout activity", async (
     planId: "solo",
     source: "launch-metrics-test",
   });
+  await trackLaunchEvent({
+    eventType: "waitlist_invite_sent",
+    email: "metric-invite@example.com",
+    source: "launch-metrics-test",
+  });
+  await trackLaunchEvent({
+    eventType: "waitlist_call_booked",
+    email: "metric-call@example.com",
+    source: "launch-metrics-test",
+  });
 
   const metrics = await getLaunchMetrics();
 
   assert.ok(metrics.totals.signups >= 1);
   assert.ok(metrics.totals.waitlistJoins >= 1);
   assert.ok(metrics.totals.checkoutClicks >= 1);
+  assert.ok(metrics.totals.invitesSent >= 1);
+  assert.ok(metrics.totals.callsBooked >= 1);
   assert.ok(metrics.recentEvents.length >= 1);
 });

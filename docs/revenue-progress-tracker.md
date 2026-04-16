@@ -50,7 +50,7 @@
 - `not started` use one niche first
 - `in progress` watch real usage closely
 - `in progress` collect every friction point in setup and activation
-- `not started` improve onboarding based on actual user confusion
+- `in progress` improve onboarding based on actual user confusion
 
 ## Phase R6: Monetization
 

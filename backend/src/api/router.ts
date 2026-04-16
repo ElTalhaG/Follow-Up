@@ -32,6 +32,7 @@ import { getLaunchMetrics } from "../launch/metrics.js";
 import {
   createWaitlistEntry,
   listWaitlistEntries,
+  recordWaitlistTouch,
   updateWaitlistEntry,
 } from "../launch/waitlist.js";
 
@@ -103,6 +104,25 @@ export function buildRouter() {
               : String(request.body.followUpAt),
       });
 
+      response.json({ entry });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  router.post("/launch/waitlist/:entryId/touch", async (request, response, next) => {
+    try {
+      const entryId = String(request.params.entryId ?? "");
+      const type = String(request.body.type ?? "").toUpperCase() as
+        | "INVITE_SENT"
+        | "FOLLOW_UP_SENT"
+        | "CALL_BOOKED";
+
+      if (!["INVITE_SENT", "FOLLOW_UP_SENT", "CALL_BOOKED"].includes(type)) {
+        throw new AuthError("type must be INVITE_SENT, FOLLOW_UP_SENT, or CALL_BOOKED.", 400);
+      }
+
+      const entry = await recordWaitlistTouch(entryId, type);
       response.json({ entry });
     } catch (error) {
       next(error);

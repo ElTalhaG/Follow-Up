@@ -35,21 +35,26 @@ export async function trackLaunchEvent(input: TrackLaunchEventInput) {
 
 export async function getLaunchMetrics() {
   const launchEvent = (prisma as unknown as { launchEvent: any }).launchEvent;
-  const [signups, waitlistJoins, checkoutClicks, recentEvents] = await Promise.all([
-    launchEvent.count({ where: { eventType: "signup_completed" } }),
-    launchEvent.count({ where: { eventType: "waitlist_joined" } }),
-    launchEvent.count({ where: { eventType: "checkout_clicked" } }),
-    launchEvent.findMany({
-      orderBy: { createdAt: "desc" },
-      take: 6,
-    }),
-  ]);
+  const [signups, waitlistJoins, checkoutClicks, invitesSent, callsBooked, recentEvents] =
+    await Promise.all([
+      launchEvent.count({ where: { eventType: "signup_completed" } }),
+      launchEvent.count({ where: { eventType: "waitlist_joined" } }),
+      launchEvent.count({ where: { eventType: "checkout_clicked" } }),
+      launchEvent.count({ where: { eventType: "waitlist_invite_sent" } }),
+      launchEvent.count({ where: { eventType: "waitlist_call_booked" } }),
+      launchEvent.findMany({
+        orderBy: { createdAt: "desc" },
+        take: 6,
+      }),
+    ]);
 
   return {
     totals: {
       signups,
       waitlistJoins,
       checkoutClicks,
+      invitesSent,
+      callsBooked,
     },
     recentEvents: (recentEvents as Array<any>).map((event) => ({
       id: event.id,

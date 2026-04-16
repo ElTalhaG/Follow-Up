@@ -17,6 +17,8 @@ type UpdateWaitlistEntryInput = {
   followUpAt?: string | null;
 };
 
+type WaitlistTouchType = "INVITE_SENT" | "FOLLOW_UP_SENT" | "CALL_BOOKED";
+
 const ALLOWED_WAITLIST_STATUSES = [
   "NEW",
   "CONTACTED",
@@ -25,6 +27,12 @@ const ALLOWED_WAITLIST_STATUSES = [
   "PAID",
   "BAD_FIT",
 ] as const;
+
+const WAITLIST_TOUCH_EVENT_MAP: Record<WaitlistTouchType, string> = {
+  INVITE_SENT: "waitlist_invite_sent",
+  FOLLOW_UP_SENT: "waitlist_follow_up_sent",
+  CALL_BOOKED: "waitlist_call_booked",
+};
 
 function serializeWaitlistEntry(entry: {
   id: string;
@@ -175,6 +183,40 @@ export async function updateWaitlistEntry(entryId: string, input: UpdateWaitlist
       source: `founder-queue:${status.toLowerCase()}`,
     });
   }
+
+  return serializeWaitlistEntry(updated);
+}
+
+export async function recordWaitlistTouch(entryId: string, type: WaitlistTouchType) {
+  const waitlistEntry = (prisma as unknown as { waitlistEntry: any }).waitlistEntry;
+  const entry = await waitlistEntry.findUnique({
+    where: { id: entryId },
+  });
+
+  if (!entry) {
+    throw new AuthError("Waitlist entry not found.", 404);
+  }
+
+  const nextStatus =
+    type === "CALL_BOOKED"
+      ? "CALL_SCHEDULED"
+      : entry.status === "NEW"
+        ? "CONTACTED"
+        : entry.status;
+
+  const updated = await waitlistEntry.update({
+    where: { id: entryId },
+    data: {
+      status: nextStatus,
+      lastContactedAt: new Date(),
+    },
+  });
+
+  await trackLaunchEvent({
+    eventType: WAITLIST_TOUCH_EVENT_MAP[type],
+    email: updated.email,
+    source: `founder-queue:${type.toLowerCase()}`,
+  });
 
   return serializeWaitlistEntry(updated);
 }
