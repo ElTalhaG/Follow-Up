@@ -158,6 +158,13 @@ function isFounderLeadStuck(entry: WaitlistEntry) {
   return getDaysSince(entry.createdAt) >= 3 && entry.touchHistory.length === 0;
 }
 
+function buildFounderNudge(entry: WaitlistEntry) {
+  const name = entry.fullName?.trim() || "there";
+  const segment = entry.segment?.trim() ? `${entry.segment} ` : "";
+
+  return `Hi ${name}, I wanted to follow up in case Followup could still help with your ${segment}lead follow-up workflow. If missed replies in Gmail are costing you warm opportunities, I can give you a quick walkthrough and get you early access.`;
+}
+
 function getActivityLabel(activity: ActivityState) {
   switch (activity) {
     case "auth":
@@ -1193,6 +1200,22 @@ export function DashboardShell() {
     }
   }
 
+  async function handleCopyFounderNudge(entry: WaitlistEntry) {
+    const nudge = buildFounderNudge(entry);
+
+    try {
+      if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(nudge);
+        setStatusMessage(`Copied a founder nudge for ${entry.fullName ?? entry.email}.`);
+        return;
+      }
+
+      setStatusMessage(`Clipboard access is unavailable. Suggested message: ${nudge}`);
+    } catch {
+      setStatusMessage(`Clipboard access failed. Suggested message: ${nudge}`);
+    }
+  }
+
   return (
     <main className="app-shell">
       {isBusy ? (
@@ -1743,6 +1766,21 @@ export function DashboardShell() {
                               </p>
                             </div>
                           ))}
+                        </div>
+                      ) : null}
+                      {isFounderLeadStuck(entry) ? (
+                        <div className="notes-box">
+                          <strong>Suggested stuck-lead nudge</strong>
+                          <p className="helper-copy">{buildFounderNudge(entry)}</p>
+                          <div className="button-row compact">
+                            <button
+                              className="ghost-button"
+                              onClick={() => void handleCopyFounderNudge(entry)}
+                              type="button"
+                            >
+                              Copy nudge
+                            </button>
+                          </div>
                         </div>
                       ) : null}
                       <div className="notes-box">
