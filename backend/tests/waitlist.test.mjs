@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {
   createWaitlistEntry,
   listWaitlistEntries,
+  recordWaitlistTouch,
   updateWaitlistEntry,
 } from "../dist/launch/waitlist.js";
 import { PrismaClient } from "@prisma/client";
@@ -92,4 +93,39 @@ test("waitlist entries can move through founder queue statuses", async () => {
   assert.equal(updated.nextAction, "Follow up if no reply.");
   assert.equal(updated.followUpAt, "2026-03-30T09:30:00.000Z");
   assert.ok(updated.lastContactedAt);
+});
+
+test("waitlist touches log outreach and move calls into scheduled state", async () => {
+  await prisma.waitlistEntry.deleteMany({
+    where: { email: "queue-touch@example.com" },
+  });
+  await prisma.launchEvent.deleteMany({
+    where: { email: "queue-touch@example.com" },
+  });
+
+  const created = await createWaitlistEntry({
+    email: "queue-touch@example.com",
+    fullName: "Queue Touch",
+    segment: "agency",
+    source: "manual-outreach",
+  });
+
+  const contacted = await recordWaitlistTouch(created.entry.id, "INVITE_SENT");
+
+  assert.equal(contacted.status, "CONTACTED");
+  assert.ok(contacted.lastContactedAt);
+
+  const scheduled = await recordWaitlistTouch(created.entry.id, "CALL_BOOKED");
+
+  assert.equal(scheduled.status, "CALL_SCHEDULED");
+
+  const inviteEvents = await prisma.launchEvent.count({
+    where: { eventType: "waitlist_invite_sent", email: "queue-touch@example.com" },
+  });
+  const bookedEvents = await prisma.launchEvent.count({
+    where: { eventType: "waitlist_call_booked", email: "queue-touch@example.com" },
+  });
+
+  assert.equal(inviteEvents, 1);
+  assert.equal(bookedEvents, 1);
 });

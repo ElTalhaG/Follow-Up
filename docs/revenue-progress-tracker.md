@@ -51,6 +51,7 @@
 - `in progress` watch real usage closely
 - `in progress` collect every friction point in setup and activation
 - `in progress` improve onboarding based on actual user confusion
+- `done` surface the founder queue by urgency so daily outreach work is obvious
 
 ## Phase R6: Monetization
 

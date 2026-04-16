@@ -262,6 +262,40 @@ export function DashboardShell() {
 
     return new Date(entry.followUpAt).getTime() > endOfTodayMs;
   }).length;
+  const founderPipelineCounts = waitlistEntries.reduce(
+    (summary, entry) => {
+      if (entry.status === "CALL_SCHEDULED") {
+        summary.callsScheduled += 1;
+      }
+
+      if (entry.status === "ACTIVE_TRIAL") {
+        summary.activeTrials += 1;
+      }
+
+      if (entry.status === "PAID") {
+        summary.paid += 1;
+      }
+
+      return summary;
+    },
+    {
+      callsScheduled: 0,
+      activeTrials: 0,
+      paid: 0,
+    },
+  );
+  const founderPriorityEntry = [...waitlistEntries]
+    .filter((entry) => entry.status !== "PAID" && entry.status !== "BAD_FIT")
+    .sort((left, right) => {
+      const leftTime = left.followUpAt ? new Date(left.followUpAt).getTime() : Number.POSITIVE_INFINITY;
+      const rightTime = right.followUpAt ? new Date(right.followUpAt).getTime() : Number.POSITIVE_INFINITY;
+
+      if (leftTime !== rightTime) {
+        return leftTime - rightTime;
+      }
+
+      return new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime();
+    })[0];
   const visibleWaitlistEntries = waitlistEntries.filter((entry) => {
     if (founderQueueView === "all") {
       return true;
@@ -1520,6 +1554,52 @@ export function DashboardShell() {
                       </div>
                     ))}
                   </div>
+                </div>
+              )}
+            </div>
+            <div className="status-card">
+              <strong>Founder daily summary</strong>
+              {waitlistEntries.length === 0 ? (
+                <p>No founder leads yet. Once people join the waitlist, this card will show who needs attention first.</p>
+              ) : (
+                <div className="analytics-stack">
+                  <div className="analytics-grid">
+                    <div className="analytics-stat">
+                      <strong>{founderOverdueCount}</strong>
+                      <span>Overdue follow-ups</span>
+                    </div>
+                    <div className="analytics-stat">
+                      <strong>{founderDueTodayCount}</strong>
+                      <span>Due today</span>
+                    </div>
+                    <div className="analytics-stat">
+                      <strong>{founderPipelineCounts.callsScheduled}</strong>
+                      <span>Calls scheduled</span>
+                    </div>
+                    <div className="analytics-stat">
+                      <strong>{founderPipelineCounts.activeTrials}</strong>
+                      <span>Active trials</span>
+                    </div>
+                  </div>
+                  <div className="history-item">
+                    <strong>
+                      {founderPriorityEntry
+                        ? `Next founder lead: ${founderPriorityEntry.fullName ?? founderPriorityEntry.email}`
+                        : "No active founder follow-up queued"}
+                    </strong>
+                    <p>
+                      {founderPriorityEntry
+                        ? `${founderPriorityEntry.nextAction ?? "Set a concrete next action."} · ${
+                            founderPriorityEntry.followUpAt
+                              ? `follow up ${formatDate(founderPriorityEntry.followUpAt)}`
+                              : "no follow-up date yet"
+                          } · ${founderPriorityEntry.status.toLowerCase().replace(/_/g, " ")}`
+                        : "Everyone is either paid, marked bad fit, or still waiting for first outreach."}
+                    </p>
+                  </div>
+                  <p className="helper-copy">
+                    {founderPipelineCounts.paid} paid so far. Keep this card tight: it should tell you who to contact next in under ten seconds.
+                  </p>
                 </div>
               )}
             </div>
