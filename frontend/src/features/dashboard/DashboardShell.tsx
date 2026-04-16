@@ -24,7 +24,7 @@ type ConversationNotes = Record<string, string>;
 type FounderNotes = Record<string, string>;
 type FounderNextActions = Record<string, string>;
 type FounderFollowUpDates = Record<string, string>;
-type FounderQueueView = "all" | "due" | "overdue" | "upcoming";
+type FounderQueueView = "all" | "due" | "overdue" | "upcoming" | "stuck";
 type WaitlistForm = {
   fullName: string;
   email: string;
@@ -148,6 +148,14 @@ function getHoursToFirstTouch(entry: WaitlistEntry) {
     (1000 * 60 * 60);
 
   return Math.max(0, Math.round(deltaHours * 10) / 10);
+}
+
+function isFounderLeadStuck(entry: WaitlistEntry) {
+  if (entry.status === "PAID" || entry.status === "BAD_FIT") {
+    return false;
+  }
+
+  return getDaysSince(entry.createdAt) >= 3 && entry.touchHistory.length === 0;
 }
 
 function getActivityLabel(activity: ActivityState) {
@@ -295,6 +303,7 @@ export function DashboardShell() {
 
     return new Date(entry.followUpAt).getTime() > endOfTodayMs;
   }).length;
+  const founderStuckCount = waitlistEntries.filter(isFounderLeadStuck).length;
   const founderPipelineCounts = waitlistEntries.reduce(
     (summary, entry) => {
       if (entry.status === "CALL_SCHEDULED") {
@@ -340,6 +349,10 @@ export function DashboardShell() {
   const visibleWaitlistEntries = waitlistEntries.filter((entry) => {
     if (founderQueueView === "all") {
       return true;
+    }
+
+    if (founderQueueView === "stuck") {
+      return isFounderLeadStuck(entry);
     }
 
     if (!entry.followUpAt) {
@@ -1625,6 +1638,10 @@ export function DashboardShell() {
                       <strong>{averageHoursToFirstTouch === null ? "n/a" : `${averageHoursToFirstTouch}h`}</strong>
                       <span>Avg first-touch speed</span>
                     </div>
+                    <div className="analytics-stat">
+                      <strong>{founderStuckCount}</strong>
+                      <span>Stuck without first touch</span>
+                    </div>
                   </div>
                   <div className="history-item">
                     <strong>
@@ -1679,9 +1696,16 @@ export function DashboardShell() {
                 >
                   Upcoming
                 </button>
+                <button
+                  className={`toggle-button ${founderQueueView === "stuck" ? "active" : ""}`}
+                  onClick={() => setFounderQueueView("stuck")}
+                  type="button"
+                >
+                  Stuck
+                </button>
               </div>
               <p className="helper-copy">
-                {founderOverdueCount} overdue · {founderDueTodayCount} due today · {founderUpcomingCount} upcoming
+                {founderOverdueCount} overdue · {founderDueTodayCount} due today · {founderUpcomingCount} upcoming · {founderStuckCount} stuck
               </p>
               {!visibleWaitlistEntries.length ? (
                 <p>No interested users captured yet.</p>
