@@ -117,6 +117,14 @@ function formatDate(value: string | null) {
   }).format(new Date(value));
 }
 
+function formatTouchType(value: string | null) {
+  if (!value) {
+    return "No outreach logged yet";
+  }
+
+  return value.replace(/^waitlist_/, "").replace(/_/g, " ");
+}
+
 function getActivityLabel(activity: ActivityState) {
   switch (activity) {
     case "auth":
@@ -1654,6 +1662,9 @@ export function DashboardShell() {
                       <p className="helper-copy">{entry.notes ?? "No notes yet."}</p>
                       <p className="helper-copy">
                         {(entry.segment ?? "lead")} · {entry.source} · joined {formatDate(entry.createdAt)}
+                      </p>
+                      <p className="helper-copy">
+                        Last touch: {formatTouchType(entry.lastTouchType)} · {formatDate(entry.lastTouchAt)}
                       </p>
                       <div className="notes-box">
                         <strong>Next action</strong>

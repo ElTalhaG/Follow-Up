@@ -52,6 +52,7 @@
 - `in progress` collect every friction point in setup and activation
 - `in progress` improve onboarding based on actual user confusion
 - `done` surface the founder queue by urgency so daily outreach work is obvious
+- `done` show the latest outreach touch on each founder lead
 
 ## Phase R6: Monetization
 

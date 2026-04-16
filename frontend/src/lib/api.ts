@@ -117,6 +117,8 @@ export type WaitlistEntry = {
   source: string;
   status: string;
   lastContactedAt: string | null;
+  lastTouchType: string | null;
+  lastTouchAt: string | null;
   createdAt: string;
   updatedAt: string;
 };
