@@ -119,6 +119,11 @@ export type WaitlistEntry = {
   lastContactedAt: string | null;
   lastTouchType: string | null;
   lastTouchAt: string | null;
+  touchHistory: Array<{
+    eventType: string;
+    createdAt: string;
+    source: string;
+  }>;
   createdAt: string;
   updatedAt: string;
 };

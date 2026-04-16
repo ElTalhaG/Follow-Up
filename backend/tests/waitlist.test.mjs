@@ -71,6 +71,10 @@ test("waitlist entries can be listed for founder queue review", async () => {
     items.find((item) => item.email === "queue-a@example.com")?.lastTouchType ?? null,
     null,
   );
+  assert.deepEqual(
+    items.find((item) => item.email === "queue-a@example.com")?.touchHistory ?? [],
+    [],
+  );
 });
 
 test("waitlist entries can move through founder queue statuses", async () => {
@@ -128,6 +132,10 @@ test("waitlist touches log outreach and move calls into scheduled state", async 
 
   assert.equal(touched?.lastTouchType, "waitlist_call_booked");
   assert.ok(touched?.lastTouchAt);
+  assert.deepEqual(
+    touched?.touchHistory.map((event) => event.eventType),
+    ["waitlist_call_booked", "waitlist_invite_sent"],
+  );
 
   const inviteEvents = await prisma.launchEvent.count({
     where: { eventType: "waitlist_invite_sent", email: "queue-touch@example.com" },

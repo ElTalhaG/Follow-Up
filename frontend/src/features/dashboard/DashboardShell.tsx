@@ -125,6 +125,10 @@ function formatTouchType(value: string | null) {
   return value.replace(/^waitlist_/, "").replace(/_/g, " ");
 }
 
+function formatTouchSource(value: string) {
+  return value.replace(/^founder-queue:/, "").replace(/_/g, " ");
+}
+
 function getActivityLabel(activity: ActivityState) {
   switch (activity) {
     case "auth":
@@ -1666,6 +1670,18 @@ export function DashboardShell() {
                       <p className="helper-copy">
                         Last touch: {formatTouchType(entry.lastTouchType)} · {formatDate(entry.lastTouchAt)}
                       </p>
+                      {entry.touchHistory.length ? (
+                        <div className="history-list">
+                          {entry.touchHistory.map((touch) => (
+                            <div className="history-item" key={`${entry.id}-${touch.eventType}-${touch.createdAt}`}>
+                              <strong>{formatTouchType(touch.eventType)}</strong>
+                              <p>
+                                {formatDate(touch.createdAt)} · {formatTouchSource(touch.source)}
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+                      ) : null}
                       <div className="notes-box">
                         <strong>Next action</strong>
                         <input

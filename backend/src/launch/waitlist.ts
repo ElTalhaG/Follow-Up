@@ -48,6 +48,11 @@ function serializeWaitlistEntry(entry: {
   lastContactedAt?: Date | null;
   lastTouchType?: string | null;
   lastTouchAt?: Date | null;
+  touchHistory?: Array<{
+    eventType: string;
+    createdAt: Date;
+    source: string;
+  }>;
   createdAt: Date;
   updatedAt?: Date;
 }) {
@@ -64,6 +69,11 @@ function serializeWaitlistEntry(entry: {
     lastContactedAt: entry.lastContactedAt?.toISOString() ?? null,
     lastTouchType: entry.lastTouchType ?? null,
     lastTouchAt: entry.lastTouchAt?.toISOString() ?? null,
+    touchHistory: (entry.touchHistory ?? []).map((event) => ({
+      eventType: event.eventType,
+      createdAt: event.createdAt.toISOString(),
+      source: event.source,
+    })),
     createdAt: entry.createdAt.toISOString(),
     updatedAt: entry.updatedAt?.toISOString() ?? entry.createdAt.toISOString(),
   };
@@ -147,26 +157,50 @@ export async function listWaitlistEntries(limit = 10) {
         orderBy: { createdAt: "desc" },
       })
     : [];
-  const touchByEmail = new Map<string, { eventType: string; createdAt: Date }>();
+  const touchByEmail = new Map<
+    string,
+    {
+      latest: { eventType: string; createdAt: Date } | null;
+      history: Array<{ eventType: string; createdAt: Date; source: string }>;
+    }
+  >();
 
   for (const event of touchEvents as Array<any>) {
-    if (!event.email || touchByEmail.has(event.email)) {
+    if (!event.email) {
       continue;
     }
 
-    touchByEmail.set(event.email, {
-      eventType: event.eventType,
-      createdAt: event.createdAt,
-    });
+    const current = touchByEmail.get(event.email) ?? {
+      latest: null,
+      history: [],
+    };
+
+    if (!current.latest) {
+      current.latest = {
+        eventType: event.eventType,
+        createdAt: event.createdAt,
+      };
+    }
+
+    if (current.history.length < 3) {
+      current.history.push({
+        eventType: event.eventType,
+        createdAt: event.createdAt,
+        source: event.source,
+      });
+    }
+
+    touchByEmail.set(event.email, current);
   }
 
   return (items as Array<any>).map((item) => {
-    const latestTouch = touchByEmail.get(item.email);
+    const touchInfo = touchByEmail.get(item.email);
 
     return serializeWaitlistEntry({
       ...item,
-      lastTouchType: latestTouch?.eventType ?? null,
-      lastTouchAt: latestTouch?.createdAt ?? null,
+      lastTouchType: touchInfo?.latest?.eventType ?? null,
+      lastTouchAt: touchInfo?.latest?.createdAt ?? null,
+      touchHistory: touchInfo?.history ?? [],
     });
   });
 }
