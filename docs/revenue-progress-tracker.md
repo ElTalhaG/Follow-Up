@@ -54,6 +54,7 @@
 - `done` surface the founder queue by urgency so daily outreach work is obvious
 - `done` show the latest outreach touch on each founder lead
 - `done` show a short recent outreach timeline on each founder lead
+- `done` show conversion-speed context like days in queue and time to first touch
 
 ## Phase R6: Monetization
 

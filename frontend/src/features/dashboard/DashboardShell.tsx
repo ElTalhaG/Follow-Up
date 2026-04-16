@@ -129,6 +129,27 @@ function formatTouchSource(value: string) {
   return value.replace(/^founder-queue:/, "").replace(/_/g, " ");
 }
 
+function getDaysSince(value: string) {
+  const deltaMs = Date.now() - new Date(value).getTime();
+  const days = Math.max(0, Math.floor(deltaMs / (1000 * 60 * 60 * 24)));
+
+  return days;
+}
+
+function getHoursToFirstTouch(entry: WaitlistEntry) {
+  if (!entry.touchHistory.length) {
+    return null;
+  }
+
+  const firstTouch = [...entry.touchHistory]
+    .sort((left, right) => new Date(left.createdAt).getTime() - new Date(right.createdAt).getTime())[0];
+  const deltaHours =
+    (new Date(firstTouch.createdAt).getTime() - new Date(entry.createdAt).getTime()) /
+    (1000 * 60 * 60);
+
+  return Math.max(0, Math.round(deltaHours * 10) / 10);
+}
+
 function getActivityLabel(activity: ActivityState) {
   switch (activity) {
     case "auth":
@@ -308,6 +329,14 @@ export function DashboardShell() {
 
       return new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime();
     })[0];
+  const touchedFounderEntries = waitlistEntries.filter((entry) => entry.touchHistory.length > 0);
+  const averageHoursToFirstTouch = touchedFounderEntries.length
+    ? Math.round(
+        (touchedFounderEntries.reduce((total, entry) => total + (getHoursToFirstTouch(entry) ?? 0), 0) /
+          touchedFounderEntries.length) *
+          10,
+      ) / 10
+    : null;
   const visibleWaitlistEntries = waitlistEntries.filter((entry) => {
     if (founderQueueView === "all") {
       return true;
@@ -1592,6 +1621,10 @@ export function DashboardShell() {
                       <strong>{founderPipelineCounts.activeTrials}</strong>
                       <span>Active trials</span>
                     </div>
+                    <div className="analytics-stat">
+                      <strong>{averageHoursToFirstTouch === null ? "n/a" : `${averageHoursToFirstTouch}h`}</strong>
+                      <span>Avg first-touch speed</span>
+                    </div>
                   </div>
                   <div className="history-item">
                     <strong>
@@ -1666,6 +1699,12 @@ export function DashboardShell() {
                       <p className="helper-copy">{entry.notes ?? "No notes yet."}</p>
                       <p className="helper-copy">
                         {(entry.segment ?? "lead")} · {entry.source} · joined {formatDate(entry.createdAt)}
+                      </p>
+                      <p className="helper-copy">
+                        {getDaysSince(entry.createdAt)} days in queue ·{" "}
+                        {getHoursToFirstTouch(entry) === null
+                          ? "no outreach yet"
+                          : `${getHoursToFirstTouch(entry)}h to first touch`}
                       </p>
                       <p className="helper-copy">
                         Last touch: {formatTouchType(entry.lastTouchType)} · {formatDate(entry.lastTouchAt)}
