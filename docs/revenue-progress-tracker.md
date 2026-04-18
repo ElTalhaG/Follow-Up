@@ -57,6 +57,7 @@
 - `done` show conversion-speed context like days in queue and time to first touch
 - `done` flag founder leads that are stuck without a first touch
 - `done` provide a ready-to-send nudge for founder leads that are stuck
+- `done` show action-log summary counts like touched today and untouched this week
 
 ## Phase R6: Monetization
 

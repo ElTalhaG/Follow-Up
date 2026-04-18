@@ -158,6 +158,14 @@ function isFounderLeadStuck(entry: WaitlistEntry) {
   return getDaysSince(entry.createdAt) >= 3 && entry.touchHistory.length === 0;
 }
 
+function isWithinLastDays(value: string | null, days: number) {
+  if (!value) {
+    return false;
+  }
+
+  return Date.now() - new Date(value).getTime() <= days * 24 * 60 * 60 * 1000;
+}
+
 function buildFounderNudge(entry: WaitlistEntry) {
   const name = entry.fullName?.trim() || "there";
   const segment = entry.segment?.trim() ? `${entry.segment} ` : "";
@@ -311,6 +319,16 @@ export function DashboardShell() {
     return new Date(entry.followUpAt).getTime() > endOfTodayMs;
   }).length;
   const founderStuckCount = waitlistEntries.filter(isFounderLeadStuck).length;
+  const founderTouchedTodayCount = waitlistEntries.filter((entry) =>
+    isWithinLastDays(entry.lastTouchAt, 1),
+  ).length;
+  const founderUntouchedThisWeekCount = waitlistEntries.filter((entry) => {
+    if (entry.status === "PAID" || entry.status === "BAD_FIT") {
+      return false;
+    }
+
+    return !isWithinLastDays(entry.lastTouchAt, 7);
+  }).length;
   const founderPipelineCounts = waitlistEntries.reduce(
     (summary, entry) => {
       if (entry.status === "CALL_SCHEDULED") {
@@ -1664,6 +1682,14 @@ export function DashboardShell() {
                     <div className="analytics-stat">
                       <strong>{founderStuckCount}</strong>
                       <span>Stuck without first touch</span>
+                    </div>
+                    <div className="analytics-stat">
+                      <strong>{founderTouchedTodayCount}</strong>
+                      <span>Touched today</span>
+                    </div>
+                    <div className="analytics-stat">
+                      <strong>{founderUntouchedThisWeekCount}</strong>
+                      <span>Untouched this week</span>
                     </div>
                   </div>
                   <div className="history-item">
