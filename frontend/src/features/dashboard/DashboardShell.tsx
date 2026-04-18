@@ -173,6 +173,34 @@ function buildFounderNudge(entry: WaitlistEntry) {
   return `Hi ${name}, I wanted to follow up in case Followup could still help with your ${segment}lead follow-up workflow. If missed replies in Gmail are costing you warm opportunities, I can give you a quick walkthrough and get you early access.`;
 }
 
+function getFounderSuggestedTask(entry: WaitlistEntry) {
+  if (isFounderLeadStuck(entry)) {
+    return {
+      priority: 1,
+      title: `Send first outreach to ${entry.fullName ?? entry.email}`,
+      detail: `${getDaysSince(entry.createdAt)} days in queue with no touch yet.`,
+    };
+  }
+
+  if (entry.followUpAt && new Date(entry.followUpAt).getTime() < Date.now()) {
+    return {
+      priority: 2,
+      title: `Follow up with ${entry.fullName ?? entry.email}`,
+      detail: `Follow-up date passed ${formatDate(entry.followUpAt)}.`,
+    };
+  }
+
+  if (entry.followUpAt && isWithinLastDays(entry.followUpAt, 1) && new Date(entry.followUpAt).getTime() >= Date.now()) {
+    return {
+      priority: 3,
+      title: `Prepare today’s follow-up for ${entry.fullName ?? entry.email}`,
+      detail: `Due ${formatDate(entry.followUpAt)}.`,
+    };
+  }
+
+  return null;
+}
+
 function getActivityLabel(activity: ActivityState) {
   switch (activity) {
     case "auth":
@@ -363,6 +391,30 @@ export function DashboardShell() {
 
       return new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime();
     })[0];
+  const founderSuggestedTasks = waitlistEntries
+    .flatMap((entry) => {
+      const task = getFounderSuggestedTask(entry);
+
+      return task
+        ? [
+            {
+              entry,
+              ...task,
+            },
+          ]
+        : [];
+    })
+    .sort((left, right) => {
+      if (left.priority !== right.priority) {
+        return left.priority - right.priority;
+      }
+
+      const leftTime = left.entry.followUpAt ? new Date(left.entry.followUpAt).getTime() : Number.POSITIVE_INFINITY;
+      const rightTime = right.entry.followUpAt ? new Date(right.entry.followUpAt).getTime() : Number.POSITIVE_INFINITY;
+
+      return leftTime - rightTime;
+    })
+    .slice(0, 3);
   const touchedFounderEntries = waitlistEntries.filter((entry) => entry.touchHistory.length > 0);
   const averageHoursToFirstTouch = touchedFounderEntries.length
     ? Math.round(
@@ -1711,6 +1763,21 @@ export function DashboardShell() {
                   <p className="helper-copy">
                     {founderPipelineCounts.paid} paid so far. Keep this card tight: it should tell you who to contact next in under ten seconds.
                   </p>
+                </div>
+              )}
+            </div>
+            <div className="status-card">
+              <strong>Suggested founder tasks</strong>
+              {!founderSuggestedTasks.length ? (
+                <p>No urgent founder tasks right now. The queue is either clear or already moving.</p>
+              ) : (
+                <div className="history-list">
+                  {founderSuggestedTasks.map((task) => (
+                    <div className="history-item" key={`${task.entry.id}-${task.priority}`}>
+                      <strong>{task.title}</strong>
+                      <p>{task.detail}</p>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>

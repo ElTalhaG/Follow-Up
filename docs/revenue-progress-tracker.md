@@ -58,6 +58,7 @@
 - `done` flag founder leads that are stuck without a first touch
 - `done` provide a ready-to-send nudge for founder leads that are stuck
 - `done` show action-log summary counts like touched today and untouched this week
+- `done` turn founder queue signals into a short suggested task list for today
 
 ## Phase R6: Monetization
 
