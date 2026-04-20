@@ -60,6 +60,7 @@
 - `done` show action-log summary counts like touched today and untouched this week
 - `done` turn founder queue signals into a short suggested task list for today
 - `done` add one-click actions to process suggested founder tasks
+- `done` show a compact founder progress feed for actions completed today
 
 ## Phase R6: Monetization
 

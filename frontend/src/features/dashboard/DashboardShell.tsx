@@ -166,6 +166,17 @@ function isWithinLastDays(value: string | null, days: number) {
   return Date.now() - new Date(value).getTime() <= days * 24 * 60 * 60 * 1000;
 }
 
+function isToday(value: string) {
+  const date = new Date(value);
+  const now = new Date();
+
+  return (
+    date.getFullYear() === now.getFullYear() &&
+    date.getMonth() === now.getMonth() &&
+    date.getDate() === now.getDate()
+  );
+}
+
 function buildFounderNudge(entry: WaitlistEntry) {
   const name = entry.fullName?.trim() || "there";
   const segment = entry.segment?.trim() ? `${entry.segment} ` : "";
@@ -418,6 +429,18 @@ export function DashboardShell() {
       return leftTime - rightTime;
     })
     .slice(0, 3);
+  const founderDoneTodayEvents = (launchMetrics?.recentEvents ?? [])
+    .filter(
+      (event) =>
+        isToday(event.createdAt) &&
+        [
+          "waitlist_invite_sent",
+          "waitlist_follow_up_sent",
+          "waitlist_call_booked",
+          "waitlist_status_updated",
+        ].includes(event.eventType),
+    )
+    .slice(0, 4);
   const touchedFounderEntries = waitlistEntries.filter((entry) => entry.touchHistory.length > 0);
   const averageHoursToFirstTouch = touchedFounderEntries.length
     ? Math.round(
@@ -1845,6 +1868,23 @@ export function DashboardShell() {
                               : "Mark paid"}
                         </button>
                       </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="status-card">
+              <strong>Founder progress today</strong>
+              {!founderDoneTodayEvents.length ? (
+                <p>No founder actions logged yet today.</p>
+              ) : (
+                <div className="history-list">
+                  {founderDoneTodayEvents.map((event) => (
+                    <div className="history-item" key={event.id}>
+                      <strong>{event.eventType.replace(/^waitlist_/, "").replace(/_/g, " ")}</strong>
+                      <p>
+                        {event.email ?? "unknown lead"} · {formatDate(event.createdAt)}
+                      </p>
                     </div>
                   ))}
                 </div>
