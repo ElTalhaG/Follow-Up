@@ -179,6 +179,7 @@ function getFounderSuggestedTask(entry: WaitlistEntry) {
       priority: 1,
       title: `Send first outreach to ${entry.fullName ?? entry.email}`,
       detail: `${getDaysSince(entry.createdAt)} days in queue with no touch yet.`,
+      action: "log-outreach" as const,
     };
   }
 
@@ -187,6 +188,7 @@ function getFounderSuggestedTask(entry: WaitlistEntry) {
       priority: 2,
       title: `Follow up with ${entry.fullName ?? entry.email}`,
       detail: `Follow-up date passed ${formatDate(entry.followUpAt)}.`,
+      action: "snooze-two-days" as const,
     };
   }
 
@@ -195,6 +197,7 @@ function getFounderSuggestedTask(entry: WaitlistEntry) {
       priority: 3,
       title: `Prepare today’s follow-up for ${entry.fullName ?? entry.email}`,
       detail: `Due ${formatDate(entry.followUpAt)}.`,
+      action: "mark-paid" as const,
     };
   }
 
@@ -1286,6 +1289,58 @@ export function DashboardShell() {
     }
   }
 
+  async function handleSuggestedFounderTask(
+    entry: WaitlistEntry,
+    action: "log-outreach" | "snooze-two-days" | "mark-paid",
+  ) {
+    setIsBusy(true);
+    setActivity("queue");
+
+    try {
+      if (action === "log-outreach") {
+        await api.recordWaitlistTouch(entry.id, "FOLLOW_UP_SENT");
+      } else if (action === "snooze-two-days") {
+        const remindAt = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString();
+        await api.updateWaitlistEntryPlan(entry.id, {
+          nextAction: founderNextActions[entry.id] || entry.nextAction || "Follow up again in two days.",
+          followUpAt: remindAt,
+        });
+      } else {
+        await api.updateWaitlistEntry(entry.id, { status: "PAID" });
+      }
+
+      const [queue, metrics] = await Promise.all([
+        api.listWaitlistEntries(),
+        api.getLaunchMetrics(),
+      ]);
+      setWaitlistEntries(queue.items);
+      setFounderNotes(
+        Object.fromEntries(queue.items.map((item) => [item.id, item.notes ?? ""])),
+      );
+      setFounderNextActions(
+        Object.fromEntries(queue.items.map((item) => [item.id, item.nextAction ?? ""])),
+      );
+      setFounderFollowUpDates(
+        Object.fromEntries(
+          queue.items.map((item) => [item.id, item.followUpAt ? item.followUpAt.slice(0, 16) : ""]),
+        ),
+      );
+      setLaunchMetrics(metrics);
+      setStatusMessage(
+        action === "log-outreach"
+          ? `Logged outreach for ${entry.fullName ?? entry.email}.`
+          : action === "snooze-two-days"
+            ? `Snoozed ${entry.fullName ?? entry.email} for two days.`
+            : `Marked ${entry.fullName ?? entry.email} as paid.`,
+      );
+    } catch (error) {
+      setStatusMessage(error instanceof Error ? error.message : "Failed to update founder task.");
+    } finally {
+      setIsBusy(false);
+      setActivity("idle");
+    }
+  }
+
   return (
     <main className="app-shell">
       {isBusy ? (
@@ -1776,6 +1831,20 @@ export function DashboardShell() {
                     <div className="history-item" key={`${task.entry.id}-${task.priority}`}>
                       <strong>{task.title}</strong>
                       <p>{task.detail}</p>
+                      <div className="button-row compact">
+                        <button
+                          className="ghost-button"
+                          disabled={isBusy}
+                          onClick={() => void handleSuggestedFounderTask(task.entry, task.action)}
+                          type="button"
+                        >
+                          {task.action === "log-outreach"
+                            ? "Log outreach"
+                            : task.action === "snooze-two-days"
+                              ? "Snooze 2 days"
+                              : "Mark paid"}
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
