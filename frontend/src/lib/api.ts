@@ -136,6 +136,12 @@ export type LaunchMetrics = {
     invitesSent: number;
     callsBooked: number;
   };
+  weeklyFounderStats: {
+    outreachTouches: number;
+    callsBooked: number;
+    paidConversions: number;
+    newWaitlistLeads: number;
+  };
   recentEvents: Array<{
     id: string;
     eventType: string;

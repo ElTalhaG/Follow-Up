@@ -61,6 +61,7 @@
 - `done` turn founder queue signals into a short suggested task list for today
 - `done` add one-click actions to process suggested founder tasks
 - `done` show a compact founder progress feed for actions completed today
+- `done` show a weekly founder scoreboard with outreach, calls, and paid conversions
 
 ## Phase R6: Monetization
 

@@ -1891,6 +1891,31 @@ export function DashboardShell() {
               )}
             </div>
             <div className="status-card">
+              <strong>Founder scoreboard this week</strong>
+              {!launchMetrics ? (
+                <p>Weekly founder stats will appear here once launch metrics are available.</p>
+              ) : (
+                <div className="analytics-grid">
+                  <div className="analytics-stat">
+                    <strong>{launchMetrics.weeklyFounderStats.outreachTouches}</strong>
+                    <span>Outreach touches</span>
+                  </div>
+                  <div className="analytics-stat">
+                    <strong>{launchMetrics.weeklyFounderStats.callsBooked}</strong>
+                    <span>Calls booked</span>
+                  </div>
+                  <div className="analytics-stat">
+                    <strong>{launchMetrics.weeklyFounderStats.paidConversions}</strong>
+                    <span>Paid conversions</span>
+                  </div>
+                  <div className="analytics-stat">
+                    <strong>{launchMetrics.weeklyFounderStats.newWaitlistLeads}</strong>
+                    <span>New waitlist leads</span>
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="status-card">
               <strong>Founder queue</strong>
               <div className="toggle-row">
                 <button

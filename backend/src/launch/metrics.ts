@@ -35,7 +35,8 @@ export async function trackLaunchEvent(input: TrackLaunchEventInput) {
 
 export async function getLaunchMetrics() {
   const launchEvent = (prisma as unknown as { launchEvent: any }).launchEvent;
-  const [signups, waitlistJoins, checkoutClicks, invitesSent, callsBooked, recentEvents] =
+  const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  const [signups, waitlistJoins, checkoutClicks, invitesSent, callsBooked, recentEvents, weeklyFounderStats] =
     await Promise.all([
       launchEvent.count({ where: { eventType: "signup_completed" } }),
       launchEvent.count({ where: { eventType: "waitlist_joined" } }),
@@ -46,6 +47,33 @@ export async function getLaunchMetrics() {
         orderBy: { createdAt: "desc" },
         take: 6,
       }),
+      Promise.all([
+        launchEvent.count({
+          where: {
+            eventType: { in: ["waitlist_invite_sent", "waitlist_follow_up_sent"] },
+            createdAt: { gte: weekAgo },
+          },
+        }),
+        launchEvent.count({
+          where: {
+            eventType: "waitlist_call_booked",
+            createdAt: { gte: weekAgo },
+          },
+        }),
+        launchEvent.count({
+          where: {
+            eventType: "waitlist_status_updated",
+            source: "founder-queue:paid",
+            createdAt: { gte: weekAgo },
+          },
+        }),
+        launchEvent.count({
+          where: {
+            eventType: "waitlist_joined",
+            createdAt: { gte: weekAgo },
+          },
+        }),
+      ]),
     ]);
 
   return {
@@ -55,6 +83,12 @@ export async function getLaunchMetrics() {
       checkoutClicks,
       invitesSent,
       callsBooked,
+    },
+    weeklyFounderStats: {
+      outreachTouches: weeklyFounderStats[0],
+      callsBooked: weeklyFounderStats[1],
+      paidConversions: weeklyFounderStats[2],
+      newWaitlistLeads: weeklyFounderStats[3],
     },
     recentEvents: (recentEvents as Array<any>).map((event) => ({
       id: event.id,

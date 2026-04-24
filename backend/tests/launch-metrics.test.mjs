@@ -37,6 +37,11 @@ test("launch metrics summarize signup, waitlist, and checkout activity", async (
     email: "metric-call@example.com",
     source: "launch-metrics-test",
   });
+  await trackLaunchEvent({
+    eventType: "waitlist_status_updated",
+    email: "metric-paid@example.com",
+    source: "founder-queue:paid",
+  });
 
   const metrics = await getLaunchMetrics();
 
@@ -45,5 +50,9 @@ test("launch metrics summarize signup, waitlist, and checkout activity", async (
   assert.ok(metrics.totals.checkoutClicks >= 1);
   assert.ok(metrics.totals.invitesSent >= 1);
   assert.ok(metrics.totals.callsBooked >= 1);
+  assert.ok(metrics.weeklyFounderStats.outreachTouches >= 1);
+  assert.ok(metrics.weeklyFounderStats.callsBooked >= 1);
+  assert.ok(metrics.weeklyFounderStats.paidConversions >= 1);
+  assert.ok(metrics.weeklyFounderStats.newWaitlistLeads >= 1);
   assert.ok(metrics.recentEvents.length >= 1);
 });
