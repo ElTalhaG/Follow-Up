@@ -29,6 +29,7 @@ This repo starts with a simple split between `frontend` and `backend` so we can 
 - [docs/outreach-scripts.md](/Users/talha/Developer/Followup/docs/outreach-scripts.md)
 - [docs/sensitive-content-policy.md](/Users/talha/Developer/Followup/docs/sensitive-content-policy.md)
 - [docs/staging-deployment-guide.md](/Users/talha/Developer/Followup/docs/staging-deployment-guide.md)
+- [docs/staging-smoke-test.md](/Users/talha/Developer/Followup/docs/staging-smoke-test.md)
 - [docs/production-env-checklist.md](/Users/talha/Developer/Followup/docs/production-env-checklist.md)
 - [docs/privacy-policy.md](/Users/talha/Developer/Followup/docs/privacy-policy.md)
 - [docs/terms-of-service.md](/Users/talha/Developer/Followup/docs/terms-of-service.md)
@@ -139,6 +140,12 @@ npm --workspace backend run db:generate:prod
 npm --workspace backend run db:push:prod
 npm --workspace backend run db:seed:prod
 npm --workspace backend run build:prod
+```
+
+Staging smoke test:
+
+```bash
+STAGING_API_BASE_URL=https://your-staging-backend.example.com/api npm run smoke:staging
 ```
 
 Current backend Gmail endpoints:
