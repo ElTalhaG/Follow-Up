@@ -33,6 +33,7 @@
 - `not started` deploy backend
 - `in progress` connect hosted database
 - `in progress` set staging env vars
+- `done` provide dedicated staging env templates for frontend and backend
 - `not started` test sign up, login, connect Gmail, sync, detect, draft, reminder
 - `not started` add basic error logging and uptime checks
 - `done` add a repeatable staging smoke test for the core backend endpoints

@@ -26,6 +26,12 @@ CORS_ORIGIN=https://your-frontend-domain.vercel.app
 PORT=4000
 ```
 
+Starter template:
+
+```bash
+cp backend/.env.staging.example backend/.env
+```
+
 ## Frontend
 
 Required:
@@ -33,6 +39,12 @@ Required:
 ```bash
 VITE_API_BASE_URL=https://your-backend-domain.example.com/api
 VITE_GMAIL_REDIRECT_URI=https://your-frontend-domain.vercel.app/oauth/google/callback
+```
+
+Starter template:
+
+```bash
+cp frontend/.env.staging.example frontend/.env
 ```
 
 ## Sanity Checks

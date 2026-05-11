@@ -50,6 +50,12 @@ PORT=4000
 CORS_ORIGIN=https://your-frontend-domain.vercel.app
 ```
 
+You can start from:
+
+```bash
+backend/.env.staging.example
+```
+
 ## 3. Frontend Environment
 
 Set these frontend env vars in Vercel:
@@ -57,6 +63,12 @@ Set these frontend env vars in Vercel:
 ```bash
 VITE_API_BASE_URL=https://your-backend-domain.example.com/api
 VITE_GMAIL_REDIRECT_URI=https://your-frontend-domain.vercel.app/oauth/google/callback
+```
+
+You can start from:
+
+```bash
+frontend/.env.staging.example
 ```
 
 ## 4. Google OAuth Setup

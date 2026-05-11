@@ -117,10 +117,22 @@ Frontend example env:
 cp frontend/.env.example frontend/.env
 ```
 
+Frontend staging example env:
+
+```bash
+cp frontend/.env.staging.example frontend/.env
+```
+
 Backend example env:
 
 ```bash
 cp backend/.env.example backend/.env
+```
+
+Backend staging example env:
+
+```bash
+cp backend/.env.staging.example backend/.env
 ```
 
 ## Production Readiness
@@ -131,6 +143,8 @@ The repo now includes starter deployment-oriented config:
 - [backend/prisma/seed.mjs](/Users/talha/Developer/Followup/backend/prisma/seed.mjs) for portable Prisma-based staging seed data
 - [backend/Dockerfile](/Users/talha/Developer/Followup/backend/Dockerfile) for containerized backend deploys
 - [docker-compose.staging.yml](/Users/talha/Developer/Followup/docker-compose.staging.yml) for a local production-like Postgres rehearsal
+- [backend/.env.staging.example](/Users/talha/Developer/Followup/backend/.env.staging.example) for hosted backend staging env setup
+- [frontend/.env.staging.example](/Users/talha/Developer/Followup/frontend/.env.staging.example) for hosted frontend staging env setup
 - [frontend/vercel.json](/Users/talha/Developer/Followup/frontend/vercel.json) so SPA routes like `/oauth/google/callback` resolve correctly on Vercel
 - [render.yaml](/Users/talha/Developer/Followup/render.yaml) as a starter Render deployment template
 - [railway.json](/Users/talha/Developer/Followup/railway.json) as a starter Railway deployment template
