@@ -30,6 +30,7 @@ This repo starts with a simple split between `frontend` and `backend` so we can 
 - [docs/sensitive-content-policy.md](/Users/talha/Developer/Followup/docs/sensitive-content-policy.md)
 - [docs/staging-deployment-guide.md](/Users/talha/Developer/Followup/docs/staging-deployment-guide.md)
 - [docs/staging-smoke-test.md](/Users/talha/Developer/Followup/docs/staging-smoke-test.md)
+- [docs/local-staging-rehearsal.md](/Users/talha/Developer/Followup/docs/local-staging-rehearsal.md)
 - [docs/production-env-checklist.md](/Users/talha/Developer/Followup/docs/production-env-checklist.md)
 - [docs/privacy-policy.md](/Users/talha/Developer/Followup/docs/privacy-policy.md)
 - [docs/terms-of-service.md](/Users/talha/Developer/Followup/docs/terms-of-service.md)
@@ -129,6 +130,7 @@ The repo now includes starter deployment-oriented config:
 - [backend/prisma/schema.postgres.prisma](/Users/talha/Developer/Followup/backend/prisma/schema.postgres.prisma) for production Postgres builds
 - [backend/prisma/seed.mjs](/Users/talha/Developer/Followup/backend/prisma/seed.mjs) for portable Prisma-based staging seed data
 - [backend/Dockerfile](/Users/talha/Developer/Followup/backend/Dockerfile) for containerized backend deploys
+- [docker-compose.staging.yml](/Users/talha/Developer/Followup/docker-compose.staging.yml) for a local production-like Postgres rehearsal
 - [frontend/vercel.json](/Users/talha/Developer/Followup/frontend/vercel.json) so SPA routes like `/oauth/google/callback` resolve correctly on Vercel
 - [render.yaml](/Users/talha/Developer/Followup/render.yaml) as a starter Render deployment template
 - [railway.json](/Users/talha/Developer/Followup/railway.json) as a starter Railway deployment template

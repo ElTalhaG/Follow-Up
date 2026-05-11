@@ -15,6 +15,7 @@
 - `in progress` prepare deployment configuration for frontend and backend
 - `in progress` verify secrets handling and environment separation
 - `done` update README with real setup instructions
+- `done` add a local production-like Postgres rehearsal stack
 
 ## Phase R2: Real Gmail OAuth
 
