@@ -5,23 +5,31 @@ if (!baseUrl) {
   process.exit(1);
 }
 
+const backendOrigin = baseUrl.endsWith("/api")
+  ? baseUrl.slice(0, -4)
+  : baseUrl.replace(/\/api\/?$/, "");
+
 const checks = [
   {
+    name: "Backend health",
+    url: `${backendOrigin}/health`,
+  },
+  {
     name: "API status",
-    path: "/status",
+    url: `${baseUrl}/status`,
   },
   {
     name: "Billing plans",
-    path: "/billing/plans",
+    url: `${baseUrl}/billing/plans`,
   },
   {
     name: "Launch metrics",
-    path: "/launch/metrics",
+    url: `${baseUrl}/launch/metrics`,
   },
 ];
 
 for (const check of checks) {
-  const response = await fetch(`${baseUrl}${check.path}`);
+  const response = await fetch(check.url);
 
   if (!response.ok) {
     console.error(`${check.name} failed with status ${response.status}.`);

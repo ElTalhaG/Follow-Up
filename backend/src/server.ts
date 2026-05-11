@@ -1,6 +1,7 @@
 import cors from "cors";
 import express from "express";
 import { buildRouter, getErrorStatusCode } from "./api/router.js";
+import { getDatabaseHealth } from "./database/prisma.js";
 import {
   buildCorsOptions,
   getPort,
@@ -25,10 +26,14 @@ app.use(rateLimit);
 app.use(express.json());
 app.use("/api", buildRouter());
 
-app.get("/health", (_request, response) => {
-  response.json({
-    ok: true,
+app.get("/health", async (_request, response) => {
+  const database = await getDatabaseHealth();
+  const ok = database.ok;
+
+  response.status(ok ? 200 : 503).json({
+    ok,
     service: "followup-backend",
+    database,
     ...getRuntimeSummary(),
   });
 });

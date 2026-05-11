@@ -35,6 +35,7 @@
 - `not started` test sign up, login, connect Gmail, sync, detect, draft, reminder
 - `not started` add basic error logging and uptime checks
 - `done` add a repeatable staging smoke test for the core backend endpoints
+- `done` make health checks validate database connectivity, not just process uptime
 
 ## Phase R4: Trust And Operations
 

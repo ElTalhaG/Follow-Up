@@ -14,3 +14,20 @@ export const prisma =
 if (process.env.NODE_ENV !== "production") {
   globalThis.__followupPrisma__ = prisma;
 }
+
+export async function getDatabaseHealth() {
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+
+    return {
+      ok: true,
+      provider: process.env.DATABASE_URL?.startsWith("postgres") ? "postgresql" : "sqlite",
+    };
+  } catch (error) {
+    return {
+      ok: false,
+      provider: process.env.DATABASE_URL?.startsWith("postgres") ? "postgresql" : "sqlite",
+      error: error instanceof Error ? error.message : "Unknown database error",
+    };
+  }
+}

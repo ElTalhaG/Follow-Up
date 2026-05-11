@@ -4,6 +4,7 @@ Once the app is deployed, run a fast API smoke test against the staging backend 
 
 ## What It Checks
 
+- `GET /health`
 - `GET /api/status`
 - `GET /api/billing/plans`
 - `GET /api/launch/metrics`
@@ -11,6 +12,7 @@ Once the app is deployed, run a fast API smoke test against the staging backend 
 These checks confirm that:
 
 - the backend is reachable
+- the backend can reach its database
 - JSON responses are working
 - billing metadata loads
 - launch metrics are available
