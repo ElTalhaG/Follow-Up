@@ -31,6 +31,7 @@ This repo starts with a simple split between `frontend` and `backend` so we can 
 - [docs/staging-deployment-guide.md](/Users/talha/Developer/Followup/docs/staging-deployment-guide.md)
 - [docs/staging-smoke-test.md](/Users/talha/Developer/Followup/docs/staging-smoke-test.md)
 - [docs/local-staging-rehearsal.md](/Users/talha/Developer/Followup/docs/local-staging-rehearsal.md)
+- [docs/zero-cost-staging-guide.md](/Users/talha/Developer/Followup/docs/zero-cost-staging-guide.md)
 - [docs/production-env-checklist.md](/Users/talha/Developer/Followup/docs/production-env-checklist.md)
 - [docs/privacy-policy.md](/Users/talha/Developer/Followup/docs/privacy-policy.md)
 - [docs/terms-of-service.md](/Users/talha/Developer/Followup/docs/terms-of-service.md)

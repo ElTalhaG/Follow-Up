@@ -13,6 +13,16 @@ This guide covers the next real milestone after the current repo state:
 - backend: Railway or Render
 - database: Neon Postgres or Supabase Postgres
 
+## Zero-Cost Option
+
+If you want the cheapest viable public demo path, use:
+
+- frontend: `Vercel Hobby`
+- backend: `Render Free Web Service`
+- database: `Render Free Postgres`
+
+See [docs/zero-cost-staging-guide.md](/Users/talha/Developer/Followup/docs/zero-cost-staging-guide.md).
+
 ## 1. Provision Postgres
 
 Create a hosted Postgres database and copy the connection string.
