@@ -27,9 +27,13 @@ Then from the repo root, prepare the production client and push the schema:
 
 ```bash
 npm install
-npm --workspace backend run db:generate:prod
-npm --workspace backend run db:push:prod
-npm --workspace backend run db:seed:prod
+DATABASE_URL=postgresql://... npm --workspace backend run release:prod
+```
+
+If you want staging seed data too:
+
+```bash
+DATABASE_URL=postgresql://... SEED_PROD_DATA=true npm --workspace backend run release:prod
 ```
 
 ## 2. Backend Environment
@@ -83,8 +87,9 @@ Recommended deploy sequence:
 
 1. connect the repo to Railway or Render
 2. set the backend env vars
-3. build with the backend production build command
-4. start with:
+3. run the production release flow against Postgres
+4. build with the backend production build command
+5. start with:
 
 ```bash
 npm --workspace backend run start

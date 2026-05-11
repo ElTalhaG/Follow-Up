@@ -16,6 +16,7 @@
 - `in progress` verify secrets handling and environment separation
 - `done` update README with real setup instructions
 - `done` add a local production-like Postgres rehearsal stack
+- `done` add a repeatable production release flow for Postgres schema push and optional seed
 
 ## Phase R2: Real Gmail OAuth
 

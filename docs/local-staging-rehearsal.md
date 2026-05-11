@@ -28,8 +28,7 @@ This starts:
 In another terminal, run:
 
 ```bash
-DATABASE_URL=postgresql://followup:followup@localhost:5432/followup npm --workspace backend run db:push:prod
-DATABASE_URL=postgresql://followup:followup@localhost:5432/followup npm --workspace backend run db:seed:prod
+DATABASE_URL=postgresql://followup:followup@localhost:5432/followup SEED_PROD_DATA=true npm --workspace backend run release:prod
 ```
 
 ## Smoke Test The Backend
