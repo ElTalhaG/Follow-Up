@@ -157,6 +157,7 @@ npm --workspace backend run db:push:prod
 npm --workspace backend run db:seed:prod
 npm --workspace backend run build:prod
 npm --workspace backend run release:prod
+npm --workspace backend run start:prod
 ```
 
 Staging smoke test:

@@ -56,6 +56,14 @@ You can start from:
 backend/.env.staging.example
 ```
 
+For staging, the repo now defaults to:
+
+```bash
+RUN_RELEASE_ON_BOOT=true
+```
+
+That lets the backend run the Postgres release flow on boot before starting the server.
+
 ## 3. Frontend Environment
 
 Set these frontend env vars in Vercel:
@@ -104,7 +112,7 @@ Recommended deploy sequence:
 5. start with:
 
 ```bash
-npm --workspace backend run start
+npm --workspace backend run start:prod
 ```
 
 ## 6. Deploy Frontend

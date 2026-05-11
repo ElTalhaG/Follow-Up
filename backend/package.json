@@ -11,6 +11,7 @@
     "db:validate:prod": "sh -c 'DATABASE_URL=\"${DATABASE_URL:-postgresql://postgres:postgres@localhost:5432/followup}\" prisma validate --schema prisma/schema.postgres.prisma'",
     "test": "npm run build && node --test --test-concurrency=1 tests/**/*.test.mjs",
     "start": "node dist/server.js",
+    "start:prod": "node scripts/start-prod.mjs",
     "db:generate": "prisma generate",
     "db:generate:prod": "prisma generate --schema prisma/schema.postgres.prisma",
     "db:push:prod": "prisma db push --schema prisma/schema.postgres.prisma",

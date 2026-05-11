@@ -17,6 +17,7 @@
 - `done` update README with real setup instructions
 - `done` add a local production-like Postgres rehearsal stack
 - `done` add a repeatable production release flow for Postgres schema push and optional seed
+- `done` support release-on-boot for staging deploys so Postgres setup is less manual
 
 ## Phase R2: Real Gmail OAuth
 

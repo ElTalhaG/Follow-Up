@@ -27,4 +27,4 @@ COPY --from=build /app/backend/prisma ./backend/prisma
 
 EXPOSE 4000
 
-CMD ["npm", "--workspace", "backend", "run", "start"]
+CMD ["npm", "--workspace", "backend", "run", "start:prod"]
