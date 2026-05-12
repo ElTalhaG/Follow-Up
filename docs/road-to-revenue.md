@@ -91,9 +91,9 @@ Before charging money, the app should work from a public URL.
 
 ### Suggested Stack
 
-- frontend: Vercel
-- backend: Railway or Render
-- database: Neon Postgres or Supabase Postgres
+- frontend: Render Static Site
+- backend: Render Free Web Service
+- database: Render Free Postgres
 
 ### Work
 

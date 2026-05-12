@@ -17,8 +17,16 @@ services:
     name: followup-frontend
     runtime: static
     rootDir: frontend
+    plan: free
     buildCommand: npm install && npm run build
     staticPublishPath: dist
+    envVars:
+      - key: VITE_API_BASE_URL
+        value: https://follow-up-l77j.onrender.com/api
+    routes:
+      - type: rewrite
+        source: "/*"
+        destination: /index.html
 
 databases:
   - name: followup-postgres

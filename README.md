@@ -146,7 +146,7 @@ The repo now includes starter deployment-oriented config:
 - [docker-compose.staging.yml](/Users/talha/Developer/Followup/docker-compose.staging.yml) for a local production-like Postgres rehearsal
 - [backend/.env.staging.example](/Users/talha/Developer/Followup/backend/.env.staging.example) for hosted backend staging env setup
 - [frontend/.env.staging.example](/Users/talha/Developer/Followup/frontend/.env.staging.example) for hosted frontend staging env setup
-- [frontend/vercel.json](/Users/talha/Developer/Followup/frontend/vercel.json) so SPA routes like `/oauth/google/callback` resolve correctly on Vercel
+- [frontend/vercel.json](/Users/talha/Developer/Followup/frontend/vercel.json) for Vercel SPA fallback support if needed
 - [render.yaml](/Users/talha/Developer/Followup/render.yaml) as a starter Render deployment template
 - [railway.json](/Users/talha/Developer/Followup/railway.json) as a starter Railway deployment template
 

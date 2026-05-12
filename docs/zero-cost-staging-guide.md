@@ -4,7 +4,7 @@ This guide is the practical path if you want a public staging environment withou
 
 ## Recommended Zero-Cost Stack
 
-- frontend: `Vercel Hobby`
+- frontend: `Render Static Site`
 - backend: `Render Free Web Service`
 - database: `Render Free Postgres`
 
@@ -19,7 +19,7 @@ This is not a forever-production setup, but it is enough to get:
 
 It matches the current repo well:
 
-- the frontend is already Vercel-friendly
+- the frontend is already Render Static Site friendly
 - the backend already has a Dockerfile
 - the repo already includes `render.yaml`
 - Render offers free web services and free Postgres for testing and hobby use
@@ -45,7 +45,7 @@ That is acceptable for our current goal:
 1. Create a free Render Postgres database.
 2. Create a free Render backend web service from this repo.
 3. Set backend env vars from [backend/.env.staging.example](/Users/talha/Developer/Followup/backend/.env.staging.example).
-4. Create a free Vercel frontend project from this repo.
+4. Create a free Render Static Site from this repo.
 5. Set frontend env vars from [frontend/.env.staging.example](/Users/talha/Developer/Followup/frontend/.env.staging.example).
 6. Keep `GMAIL_MOCK_MODE=true` for the first hosted demo.
 7. Run the smoke test against the hosted backend.

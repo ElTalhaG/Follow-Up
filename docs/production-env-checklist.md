@@ -22,7 +22,7 @@ GMAIL_MOCK_MODE=false
 Required in production:
 
 ```bash
-CORS_ORIGIN=https://your-frontend-domain.vercel.app
+CORS_ORIGIN=https://your-frontend-domain.onrender.com
 PORT=4000
 ```
 
@@ -37,8 +37,8 @@ cp backend/.env.staging.example backend/.env
 Required:
 
 ```bash
-VITE_API_BASE_URL=https://your-backend-domain.example.com/api
-VITE_GMAIL_REDIRECT_URI=https://your-frontend-domain.vercel.app/oauth/google/callback
+VITE_API_BASE_URL=https://follow-up-l77j.onrender.com/api
+VITE_GMAIL_REDIRECT_URI=
 ```
 
 Starter template:
@@ -65,6 +65,6 @@ After deploy:
 1. open `/health` or `/live` on the backend
 2. open `/ready` on the backend to confirm database access
 3. confirm `databaseProvider` is `postgresql`
-4. confirm `gmailMode` is `live`
+4. confirm `gmailMode` is `mock` for first staging or `live` after Google OAuth is configured
 5. confirm `hasCorsOrigin` is `true`
 6. run the Gmail connect flow from the hosted frontend

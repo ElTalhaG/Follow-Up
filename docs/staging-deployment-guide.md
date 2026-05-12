@@ -9,15 +9,15 @@ This guide covers the next real milestone after the current repo state:
 
 ## Suggested Stack
 
-- frontend: Vercel
-- backend: Railway or Render
-- database: Neon Postgres or Supabase Postgres
+- frontend: Render Static Site
+- backend: Render Free Web Service
+- database: Render Free Postgres
 
 ## Zero-Cost Option
 
 If you want the cheapest viable public demo path, use:
 
-- frontend: `Vercel Hobby`
+- frontend: `Render Static Site`
 - backend: `Render Free Web Service`
 - database: `Render Free Postgres`
 
@@ -55,9 +55,9 @@ DATABASE_URL=postgresql://...
 AUTH_SECRET=replace-this-with-a-long-random-secret
 GMAIL_CLIENT_ID=your-google-client-id
 GMAIL_CLIENT_SECRET=your-google-client-secret
-GMAIL_MOCK_MODE=false
+GMAIL_MOCK_MODE=true
 PORT=4000
-CORS_ORIGIN=https://your-frontend-domain.vercel.app
+CORS_ORIGIN=https://your-frontend-domain.onrender.com
 RUN_RELEASE_ON_BOOT=false
 ```
 
@@ -91,11 +91,11 @@ FORCE_PRISMA_GENERATE_ON_RELEASE=true
 
 ## 3. Frontend Environment
 
-Set these frontend env vars in Vercel:
+Set these frontend env vars in Render:
 
 ```bash
-VITE_API_BASE_URL=https://your-backend-domain.example.com/api
-VITE_GMAIL_REDIRECT_URI=https://your-frontend-domain.vercel.app/oauth/google/callback
+VITE_API_BASE_URL=https://follow-up-l77j.onrender.com/api
+VITE_GMAIL_REDIRECT_URI=
 ```
 
 You can start from:
@@ -115,7 +115,7 @@ In Google Cloud:
 Authorized redirect URI:
 
 ```bash
-https://your-frontend-domain.vercel.app/oauth/google/callback
+https://your-frontend-domain.onrender.com/oauth/google/callback
 ```
 
 ## 5. Deploy Backend
@@ -144,14 +144,16 @@ npm --workspace backend run start:prod
 
 ## 6. Deploy Frontend
 
-The repo includes [frontend/vercel.json](/Users/talha/Developer/Followup/frontend/vercel.json) so SPA routes like `/oauth/google/callback` resolve to the app correctly.
+The repo includes [render.yaml](/Users/talha/Developer/Followup/render.yaml) static-site settings so SPA routes like `/oauth/google/callback` resolve to the app correctly.
 
 Recommended deploy sequence:
 
-1. connect the repo to Vercel
+1. create a Render Static Site from the repo
 2. set the frontend env vars
-3. build normally
-4. open the deployed app and verify the callback route renders
+3. use `frontend` as the root directory
+4. use `npm install && npm run build` as the build command
+5. use `dist` as the publish directory
+6. open the deployed app and verify the callback route renders
 
 ## 7. Staging Validation Checklist
 
