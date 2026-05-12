@@ -11,8 +11,12 @@ const backendOrigin = baseUrl.endsWith("/api")
 
 const checks = [
   {
-    name: "Backend health",
+    name: "Backend liveness",
     url: `${backendOrigin}/health`,
+  },
+  {
+    name: "Database readiness",
+    url: `${backendOrigin}/ready`,
   },
   {
     name: "API status",

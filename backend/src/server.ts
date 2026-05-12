@@ -4,6 +4,7 @@ import { buildRouter, getErrorStatusCode } from "./api/router.js";
 import { getDatabaseHealth } from "./database/prisma.js";
 import {
   buildCorsOptions,
+  getDatabaseTargetForLogs,
   getPort,
   getRuntimeSummary,
   isProduction,
@@ -26,7 +27,15 @@ app.use(rateLimit);
 app.use(express.json());
 app.use("/api", buildRouter());
 
-app.get("/health", async (_request, response) => {
+app.get(["/health", "/live"], (_request, response) => {
+  response.status(200).json({
+    ok: true,
+    service: "followup-backend",
+    ...getRuntimeSummary(),
+  });
+});
+
+app.get("/ready", async (_request, response) => {
   const database = await getDatabaseHealth();
   const ok = database.ok;
 
@@ -66,5 +75,6 @@ app.listen(port, () => {
   logInfo("backend_started", {
     port,
     ...getRuntimeSummary(),
+    ...getDatabaseTargetForLogs(),
   });
 });

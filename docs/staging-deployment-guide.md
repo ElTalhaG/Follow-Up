@@ -133,9 +133,10 @@ Recommended deploy sequence:
 1. connect the repo to Railway or Render
 2. set the backend env vars
 3. deploy the backend web service
-4. confirm `/health` responds
-5. run the production release flow against Postgres when schema changes are needed
-6. start with:
+4. confirm `/health` or `/live` responds
+5. confirm `/ready` responds before testing real product flows
+6. run the production release flow against Postgres when schema changes are needed
+7. start with:
 
 ```bash
 npm --workspace backend run start:prod

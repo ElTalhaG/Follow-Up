@@ -39,6 +39,37 @@ export function getDatabaseProvider() {
   return "unknown";
 }
 
+export function getDatabaseTargetForLogs() {
+  const value = process.env.DATABASE_URL?.trim();
+
+  if (!value) {
+    return {
+      databaseHost: "unset",
+      databaseName: "unset",
+      databaseUser: "unset",
+      databaseSslMode: "unset",
+    };
+  }
+
+  try {
+    const parsed = new URL(value);
+
+    return {
+      databaseHost: parsed.hostname || "unknown",
+      databaseName: parsed.pathname.replace(/^\//, "") || "unknown",
+      databaseUser: parsed.username ? decodeURIComponent(parsed.username) : "unknown",
+      databaseSslMode: parsed.searchParams.get("sslmode") ?? "unset",
+    };
+  } catch {
+    return {
+      databaseHost: "invalid-url",
+      databaseName: "invalid-url",
+      databaseUser: "invalid-url",
+      databaseSslMode: "invalid-url",
+    };
+  }
+}
+
 export function getGmailMode() {
   return process.env.GMAIL_MOCK_MODE === "true" ? "mock" : "live";
 }

@@ -5,6 +5,7 @@ Once the app is deployed, run a fast API smoke test against the staging backend 
 ## What It Checks
 
 - `GET /health`
+- `GET /ready`
 - `GET /api/status`
 - `GET /api/billing/plans`
 - `GET /api/launch/metrics`

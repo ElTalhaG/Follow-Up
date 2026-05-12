@@ -62,8 +62,9 @@ npm test
 
 After deploy:
 
-1. open `/health` on the backend
-2. confirm `databaseProvider` is `postgresql`
-3. confirm `gmailMode` is `live`
-4. confirm `hasCorsOrigin` is `true`
-5. run the Gmail connect flow from the hosted frontend
+1. open `/health` or `/live` on the backend
+2. open `/ready` on the backend to confirm database access
+3. confirm `databaseProvider` is `postgresql`
+4. confirm `gmailMode` is `live`
+5. confirm `hasCorsOrigin` is `true`
+6. run the Gmail connect flow from the hosted frontend
