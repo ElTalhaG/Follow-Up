@@ -24,6 +24,7 @@ COPY --from=build /app/frontend/package.json frontend/package.json
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/backend/dist ./backend/dist
 COPY --from=build /app/backend/prisma ./backend/prisma
+COPY --from=build /app/backend/scripts ./backend/scripts
 
 EXPOSE 4000
 
