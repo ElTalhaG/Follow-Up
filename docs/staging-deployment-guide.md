@@ -60,6 +60,8 @@ PORT=4000
 CORS_ORIGIN=https://your-frontend-domain.vercel.app
 ```
 
+If you are using a Render external Postgres URL and it does not already include `sslmode=require`, the backend boot flow now adds that automatically.
+
 You can start from:
 
 ```bash

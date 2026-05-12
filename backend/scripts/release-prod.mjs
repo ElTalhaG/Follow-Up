@@ -1,4 +1,5 @@
 import { execFileSync } from "node:child_process";
+import { normalizeDatabaseUrl } from "./database-url.mjs";
 
 const databaseUrl = process.env.DATABASE_URL?.trim();
 
@@ -12,11 +13,21 @@ if (!databaseUrl.startsWith("postgres://") && !databaseUrl.startsWith("postgresq
   process.exit(1);
 }
 
+const normalizedDatabaseUrl = normalizeDatabaseUrl(databaseUrl);
+const childEnv = {
+  ...process.env,
+  DATABASE_URL: normalizedDatabaseUrl,
+};
+
+if (normalizedDatabaseUrl !== databaseUrl) {
+  console.log("Normalized PostgreSQL connection settings for the current hosting provider.");
+}
+
 function run(command, args) {
   execFileSync(command, args, {
     stdio: "inherit",
     cwd: new URL("..", import.meta.url),
-    env: process.env,
+    env: childEnv,
   });
 }
 

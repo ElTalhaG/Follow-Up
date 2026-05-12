@@ -40,6 +40,7 @@
 - `not started` add basic error logging and uptime checks
 - `done` add a repeatable staging smoke test for the core backend endpoints
 - `done` make health checks validate database connectivity, not just process uptime
+- `done` normalize Render-hosted Postgres URLs for SSL during boot-time release flow
 
 ## Phase R4: Trust And Operations
 
