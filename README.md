@@ -161,6 +161,8 @@ npm --workspace backend run release:prod
 npm --workspace backend run start:prod
 ```
 
+For hosted free-tier web services, keep `RUN_RELEASE_ON_BOOT=false` and run `release:prod` separately when you need to create or update the Postgres schema. This keeps the web service startup fast enough for providers like Render.
+
 Staging smoke test:
 
 ```bash

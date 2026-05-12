@@ -58,6 +58,7 @@ GMAIL_CLIENT_SECRET=your-google-client-secret
 GMAIL_MOCK_MODE=false
 PORT=4000
 CORS_ORIGIN=https://your-frontend-domain.vercel.app
+RUN_RELEASE_ON_BOOT=false
 ```
 
 If you are using a Render external Postgres URL and it does not already include `sslmode=require`, the backend boot flow now adds that automatically.
@@ -71,11 +72,18 @@ backend/.env.staging.example
 For staging, the repo now defaults to:
 
 ```bash
-RUN_RELEASE_ON_BOOT=true
+RUN_RELEASE_ON_BOOT=false
 ```
 
-That lets the backend run the Postgres release flow on boot before starting the server.
-The boot-time flow is intentionally lean and does not regenerate Prisma unless you explicitly set:
+Keep this value `false` for Render Free Web Services. The web service should start the server first, not spend its startup window pushing database schema changes.
+
+Run the Postgres release flow separately whenever the database schema needs to be created or updated:
+
+```bash
+DATABASE_URL=postgresql://... npm --workspace backend run release:prod
+```
+
+The release flow is intentionally lean and does not regenerate Prisma unless you explicitly set:
 
 ```bash
 FORCE_PRISMA_GENERATE_ON_RELEASE=true
@@ -124,9 +132,10 @@ Recommended deploy sequence:
 
 1. connect the repo to Railway or Render
 2. set the backend env vars
-3. run the production release flow against Postgres
-4. build with the backend production build command
-5. start with:
+3. deploy the backend web service
+4. confirm `/health` responds
+5. run the production release flow against Postgres when schema changes are needed
+6. start with:
 
 ```bash
 npm --workspace backend run start:prod

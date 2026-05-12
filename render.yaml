@@ -2,7 +2,7 @@ services:
   - type: web
     name: followup-backend
     env: docker
-    plan: starter
+    plan: free
     dockerfilePath: ./backend/Dockerfile
     healthCheckPath: /health
     envVars:
@@ -11,7 +11,7 @@ services:
       - key: PORT
         value: "4000"
       - key: RUN_RELEASE_ON_BOOT
-        value: "true"
+        value: "false"
 
   - type: web
     name: followup-frontend
@@ -22,5 +22,6 @@ services:
 
 databases:
   - name: followup-postgres
+    plan: free
     databaseName: followup
     user: followup

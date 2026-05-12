@@ -17,7 +17,7 @@
 - `done` update README with real setup instructions
 - `done` add a local production-like Postgres rehearsal stack
 - `done` add a repeatable production release flow for Postgres schema push and optional seed
-- `done` support release-on-boot for staging deploys so Postgres setup is less manual
+- `done` keep database release separate from web-service boot so hosted deploys can start reliably
 
 ## Phase R2: Real Gmail OAuth
 
@@ -40,7 +40,7 @@
 - `not started` add basic error logging and uptime checks
 - `done` add a repeatable staging smoke test for the core backend endpoints
 - `done` make health checks validate database connectivity, not just process uptime
-- `done` normalize Render-hosted Postgres URLs for SSL during boot-time release flow
+- `done` normalize Render-hosted Postgres URLs for SSL during production startup and release flow
 
 ## Phase R4: Trust And Operations
 

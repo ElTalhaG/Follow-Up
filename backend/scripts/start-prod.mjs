@@ -14,6 +14,8 @@ try {
       cwd: new URL("..", import.meta.url),
       env: process.env,
     });
+  } else {
+    console.log("Skipping boot-time database release.");
   }
 
   execFileSync("node", ["dist/server.js"], {
