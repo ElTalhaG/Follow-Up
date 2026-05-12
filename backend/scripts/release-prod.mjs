@@ -20,10 +20,16 @@ function run(command, args) {
   });
 }
 
-run("npx", ["prisma", "generate", "--schema", "prisma/schema.postgres.prisma"]);
+if (process.env.FORCE_PRISMA_GENERATE_ON_RELEASE === "true") {
+  console.log("Generating Prisma client for production release...");
+  run("npx", ["prisma", "generate", "--schema", "prisma/schema.postgres.prisma"]);
+}
+
+console.log("Pushing PostgreSQL schema...");
 run("npx", ["prisma", "db", "push", "--schema", "prisma/schema.postgres.prisma"]);
 
 if (process.env.SEED_PROD_DATA === "true") {
+  console.log("Seeding production data...");
   run("node", ["prisma/seed.mjs"]);
 }
 

@@ -73,6 +73,11 @@ RUN_RELEASE_ON_BOOT=true
 ```
 
 That lets the backend run the Postgres release flow on boot before starting the server.
+The boot-time flow is intentionally lean and does not regenerate Prisma unless you explicitly set:
+
+```bash
+FORCE_PRISMA_GENERATE_ON_RELEASE=true
+```
 
 ## 3. Frontend Environment
 
