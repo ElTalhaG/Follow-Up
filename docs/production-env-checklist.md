@@ -22,7 +22,7 @@ GMAIL_MOCK_MODE=false
 Required in production:
 
 ```bash
-CORS_ORIGIN=https://your-frontend-domain.onrender.com
+CORS_ORIGIN=https://follow-up-1-5b9e.onrender.com
 PORT=4000
 ```
 

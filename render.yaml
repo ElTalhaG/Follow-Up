@@ -12,6 +12,8 @@ services:
         value: "4000"
       - key: RUN_RELEASE_ON_BOOT
         value: "false"
+      - key: CORS_ORIGIN
+        value: https://follow-up-1-5b9e.onrender.com
 
   - type: web
     name: followup-frontend

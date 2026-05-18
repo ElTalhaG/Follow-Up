@@ -30,7 +30,7 @@
 
 ## Phase R3: Hosted Staging
 
-- `in progress` deploy frontend
+- `done` deploy frontend
 - `done` deploy backend
 - `done` connect hosted database
 - `in progress` set staging env vars

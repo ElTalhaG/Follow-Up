@@ -57,7 +57,7 @@ GMAIL_CLIENT_ID=your-google-client-id
 GMAIL_CLIENT_SECRET=your-google-client-secret
 GMAIL_MOCK_MODE=true
 PORT=4000
-CORS_ORIGIN=https://your-frontend-domain.onrender.com
+CORS_ORIGIN=https://follow-up-1-5b9e.onrender.com
 RUN_RELEASE_ON_BOOT=false
 ```
 
@@ -115,7 +115,7 @@ In Google Cloud:
 Authorized redirect URI:
 
 ```bash
-https://your-frontend-domain.onrender.com/oauth/google/callback
+https://follow-up-1-5b9e.onrender.com/oauth/google/callback
 ```
 
 ## 5. Deploy Backend
