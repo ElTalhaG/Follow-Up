@@ -477,7 +477,7 @@ export function DashboardShell() {
   const hasConnectedInbox = accounts.length > 0;
   const hasSyncedData = conversations.length > 0;
   const hasDetectedWork = followUps.length > 0;
-  const ctaLabel = session ? "Run demo flow" : "Create account and run the demo";
+  const ctaLabel = session ? "Run hosted demo" : "Create free beta account";
   const onboardingSteps = [
     {
       label: "Create your account",
@@ -1031,6 +1031,20 @@ export function DashboardShell() {
     setStatusMessage("Signed out.");
   }
 
+  function handleHeroPrimaryAction() {
+    if (session) {
+      void handleRunDemo();
+      return;
+    }
+
+    setAuthMode("register");
+    document.getElementById("signup")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function scrollToFoundingAccess() {
+    document.getElementById("founding-access")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
   async function handleSaveConversationNotes(conversationId: string) {
     if (!session) {
       return;
@@ -1374,20 +1388,43 @@ export function DashboardShell() {
         </div>
       ) : null}
       <section className="hero">
-        <p className="eyebrow">V1 focus: Gmail follow-ups for freelancers</p>
+        <p className="eyebrow">Public beta: Gmail follow-ups for freelancers</p>
         <h1>Never lose a warm lead in your inbox again.</h1>
         <p className="hero-copy">
           Followup flags stalled conversations, explains why they matter, and
           helps you send the next message faster.
         </p>
+        <div className="hero-metrics" aria-label="Beta launch status">
+          <span>Hosted demo live</span>
+          <span>Mock Gmail flow ready</span>
+          <span>{trialDays}-day beta trial</span>
+        </div>
         <div className="hero-actions">
-          <button className="primary-button" disabled={isBusy || !session} onClick={handleRunDemo}>
+          <button className="primary-button" disabled={isBusy} onClick={handleHeroPrimaryAction}>
             {ctaLabel}
           </button>
+          <button className="secondary-button" disabled={isBusy} onClick={scrollToFoundingAccess} type="button">
+            Join founding beta
+          </button>
           <p className="helper-copy">
-            The fastest path: connect Gmail, sync recent threads, and surface your first missed follow-up.
+            Test the hosted demo in two minutes. If it fits your workflow, join the founding-user list and we will onboard you personally.
           </p>
         </div>
+        <form className="beta-capture" onSubmit={handleJoinWaitlist}>
+          <label className="field">
+            <span>Want early access without creating an account?</span>
+            <input
+              value={waitlistForm.email}
+              onChange={(event) =>
+                setWaitlistForm((current) => ({ ...current, email: event.target.value }))
+              }
+              placeholder="you@business.com"
+            />
+          </label>
+          <button className="primary-button" disabled={isBusy} type="submit">
+            Request beta access
+          </button>
+        </form>
         <div className="hero-proof-grid">
           <div className="hero-proof-card">
             <strong>For</strong>
@@ -1405,7 +1442,7 @@ export function DashboardShell() {
       </section>
 
       <section className="panel-grid">
-        <article className="panel">
+        <article className="panel" id="signup">
           <div className="panel-header">
             <h2>Urgent Follow-Ups</h2>
             <span className="pill">{openFollowUps.length} open</span>
@@ -1692,7 +1729,7 @@ export function DashboardShell() {
                 ))}
               </div>
             </div>
-            <div className="status-card">
+            <div className="status-card conversion-card" id="founding-access">
               <strong>Founding-user access</strong>
               <p>Join the early-access list to get staging access, founding pricing, and hands-on onboarding.</p>
               <form className="auth-form" onSubmit={handleJoinWaitlist}>

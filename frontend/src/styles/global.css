@@ -75,10 +75,46 @@ body::before {
 }
 
 .hero-actions {
-  display: grid;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
   gap: 12px;
   margin-top: 20px;
   max-width: 620px;
+}
+
+.hero-actions .helper-copy {
+  flex-basis: 100%;
+}
+
+.hero-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.hero-metrics span {
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.58);
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.beta-capture {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) auto;
+  gap: 12px;
+  align-items: end;
+  max-width: 680px;
+  margin-top: 18px;
+  padding: 14px;
+  border: 1px solid rgba(203, 95, 47, 0.22);
+  border-radius: 22px;
+  background: rgba(255, 250, 242, 0.74);
+  box-shadow: 0 14px 38px rgba(82, 50, 31, 0.08);
 }
 
 .hero-proof-grid,
@@ -319,6 +355,31 @@ body::before {
   border-color: rgba(203, 95, 47, 0.28);
 }
 
+.conversion-card {
+  position: relative;
+  overflow: hidden;
+  border-color: rgba(203, 95, 47, 0.28);
+  background:
+    radial-gradient(circle at top right, rgba(203, 95, 47, 0.16), transparent 36%),
+    rgba(255, 250, 242, 0.8);
+}
+
+.conversion-card::before {
+  content: "Beta";
+  position: absolute;
+  top: 14px;
+  right: -28px;
+  width: 120px;
+  padding: 5px 0;
+  transform: rotate(28deg);
+  background: var(--accent);
+  color: white;
+  text-align: center;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
 .pricing-price {
   display: flex;
   align-items: baseline;
@@ -538,6 +599,10 @@ body::before {
 
   .hero-proof-grid,
   .pricing-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .beta-capture {
     grid-template-columns: 1fr;
   }
 
