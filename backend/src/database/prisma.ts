@@ -16,17 +16,24 @@ if (process.env.NODE_ENV !== "production") {
 }
 
 export async function getDatabaseHealth() {
+  const provider = process.env.DATABASE_URL?.startsWith("postgres") ? "postgresql" : "sqlite";
+
   try {
     await prisma.$queryRaw`SELECT 1`;
+    await prisma.user.count();
 
     return {
       ok: true,
-      provider: process.env.DATABASE_URL?.startsWith("postgres") ? "postgresql" : "sqlite",
+      provider,
+      connection: true,
+      schema: true,
     };
   } catch (error) {
     return {
       ok: false,
-      provider: process.env.DATABASE_URL?.startsWith("postgres") ? "postgresql" : "sqlite",
+      provider,
+      connection: true,
+      schema: false,
       error: error instanceof Error ? error.message : "Unknown database error",
     };
   }

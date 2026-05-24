@@ -6,5 +6,7 @@ test("database health check reports ok for the active local database", async () 
   const health = await getDatabaseHealth();
 
   assert.equal(health.ok, true);
+  assert.equal(health.connection, true);
+  assert.equal(health.schema, true);
   assert.ok(["sqlite", "postgresql"].includes(health.provider));
 });
